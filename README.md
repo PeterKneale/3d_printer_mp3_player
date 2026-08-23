@@ -12,17 +12,19 @@ Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png
 
 ## Contents
 
-- [Bill of materials](#bill-of-materials)
-- [Building the STLs](#building-the-stls)
-- [Board size](#board-size)
-- [Parts to print](#parts-to-print)
-- [Size, and how to shrink it](#size-and-how-to-shrink-it)
-- [Changing the music](#changing-the-music)
-- [Assembly](#assembly)
-- [Wiring the buttons](#wiring-the-buttons)
-- [Filling the card from YouTube](#filling-the-card-from-youtube)
-- [Parameters](#parameters)
-- [Layout](#layout)
+- [Personal jukebox enclosure](#personal-jukebox-enclosure)
+  - [Contents](#contents)
+  - [Bill of materials](#bill-of-materials)
+  - [Building the STLs](#building-the-stls)
+  - [Board size](#board-size)
+  - [Parts to print](#parts-to-print)
+  - [Size, and how to shrink it](#size-and-how-to-shrink-it)
+  - [Changing the music](#changing-the-music)
+  - [Assembly](#assembly)
+  - [Wiring the buttons](#wiring-the-buttons)
+  - [Filling the card from YouTube](#filling-the-card-from-youtube)
+  - [Parameters](#parameters)
+  - [Layout](#layout)
 
 ## Bill of materials
 
@@ -206,18 +208,31 @@ accumulates anything you did not put there.
 brew install yt-dlp ffmpeg
 ```
 
-Download a whole playlist as numbered mp3s. The public domain Famous Speeches list is a fair
-example, 84 tracks:
+`get-music.sh` wraps the download. The public domain Famous Speeches list is a fair example,
+84 tracks:
 
 ```sh
-yt-dlp -x --audio-format mp3 \
-  -o "$HOME/Music/mp3card/%(playlist_index)02d-%(title)s.%(ext)s" \
-  "https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895"
+./get-music.sh -n 'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'
+./get-music.sh    'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'
+```
+
+`-n` lists the tracks without downloading. `-i 6` or `-i 1-10` takes only those positions, `-1`
+takes just the linked video rather than its playlist, `-o DIR` changes the destination from
+`~/Music/mp3card` and `-m` writes title and artist tags, which YouTube sources otherwise arrive
+without. `./get-music.sh -h` has the rest.
+
+Underneath it is one yt-dlp call:
+
+```sh
+yt-dlp -x --audio-format mp3 --restrict-filenames \
+  -o "$HOME/Music/mp3card/%(playlist_index&{:02d}-|)s%(title)s.%(ext)s" URL
 ```
 
 A `watch?v=...&list=...` URL takes the whole playlist, because yt-dlp follows the `list` parameter
-whether or not `&index=` is on the end. Add `--no-playlist` for just that one video, or
-`--playlist-items 6` to pick one out by position.
+whether or not `&index=` is on the end. The conditional `playlist_index` numbers playlist tracks
+and leaves a lone video unnumbered, where a plain `%(playlist_index)02d` would name it `NA-`.
+`--restrict-filenames` flattens the fullwidth quotes and colons YouTube titles carry, which a
+FAT32 card and an ASCII-only player are both happier without.
 
 ID3 tags are left alone. yt-dlp writes nothing of its own beyond an encoder string, so whatever
 titles and artists the source carries survive onto the card. Pass `--embed-metadata` if you want it
