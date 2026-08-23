@@ -41,7 +41,6 @@ three-quarter.
 | M3 x 10 self-tapping screws              |             | 8 off, 4 lid and 4 base                  |
 | M3 x 6 self-tapping screws               |             | 4 off, speaker ring. Not 8 mm, see below |
 | M2 screw                                 |             | 2 off, PCB                               |
-| Second filament, any colour              |             | the raised button labels                 |
 
 ## Building the STLs
 
@@ -50,8 +49,8 @@ the parametric sizes first and prints them, refuses to build if an override is b
 OpenSCAD warning or a non-manifold result, so a run that reports `ok` is a run you can slice.
 
 ```sh
-./make-stls.sh          # the six parts loose, to stl/
-./make-stls.sh plate    # the same six laid out on the bed, to stl/plate/, 177 x 191 mm
+./make-stls.sh          # the five parts, one STL each, to stl/
+./make-stls.sh plate    # all five on one bed as a single STL, 177 x 191 mm, needs a 200 bed
 ./make-stls.sh --help
 ```
 
@@ -83,29 +82,20 @@ posts, card slot and connector openings all follow.
 ./make-stls.sh parts
 ```
 
-Six parts: `body`, `panel`, `lid`, `labels`, `base` and `speaker_ring`. Each has one job. The body
-is walls and openings, the panel is the show face and the speaker, the base carries the board, the
-lid carries the buttons, the labels are the writing.
+Five parts: `body`, `panel`, `lid`, `base` and `speaker_ring`. Each has one job. The body is walls
+and openings, the panel is the show face and the speaker, the base carries the board, the lid
+carries the buttons and their labels.
 
 No supports needed. Both shell halves print on their backs, which is their largest face and puts the
 grille and the card slot flat on the bed instead of up a wall. Everything else prints flat.
 0.2 mm layers, 3 perimeters.
 
-### A colour per part
-
-`./make-stls.sh plate` writes the same six parts to `stl/plate/`, each already rotated into its
-print orientation and moved to its own spot on a 177 x 191 mm bed. Load all six into the slicer at
-once and they arrive as separate objects, correctly placed, so you can give the front, the back, the
-lid, the base and the writing whatever filament you like. `labels` lands exactly on the lid's top
-face, which makes the raised PREV/PLAY/NEXT a colour change three layers from the end rather than a
-second object to align.
-
-For a single colour it makes no difference: print the same six, or render `part="print_plate"` for
-one merged solid of the whole bed.
+`./make-stls.sh plate` writes the whole lot as one STL, `stl/print_plate.stl`, 177 x 191 x 36 mm,
+every part already rotated so none of them needs supports. That is the one to slice: load it, pick a
+filament, go. Nothing on the box needs a second colour.
 
 `part="assembly"` is the preview and `part="none"` emits nothing so the file can be `include`d as a
-library. Any single part renders on its own with `openscad -o x.stl -D 'part="lid"' jukebox.scad`,
-and adding `-D on_plate=true` puts it where the plate would.
+library. Any single part renders on its own with `openscad -o x.stl -D 'part="lid"' jukebox.scad`.
 
 ## The split shell
 
@@ -219,7 +209,8 @@ One knock-on: the holder overhangs the seat rail on the card side, so that rail 
    `pcb_screw_d = 2.6`. Everything from here on is wired with the board on the loose plate.
 4. Wire the three pushbuttons across the three tact switches you need, see below. Mount the buttons
    in the lid and fit their nuts. The lid is thinned to `button_panel_t` (2 mm) around each hole so
-   the nuts still reach the thread.
+   the nuts still reach the thread. The nuts land on the outside face, so `button_nut_d` is what
+   keeps the lettering out of their way.
 5. Speaker leads go to the S-OUT pair on the header end. Leave slack: the panel and the base plate
    have to come apart again to get the box shut.
 6. Offer the panel up to the shell and hold it there. It is loose until the screws go in.
@@ -354,7 +345,12 @@ here because they are what you change if you build this with a different board o
   too large and it crushes the cone.
 - `button_hole_d` - 7.2 mm, from Jaycar's 7 mm cutout for this pushbutton family plus fit. Check
   yours with calipers, the SP07xx bushings vary.
-- `button_labels` - raised `label_h` off the lid and printed as their own part, `labels`.
+- `button_labels` - moulded `label_h` proud of the lid rather than cut into it, and part of the lid
+  rather than a separate part.
+- `button_nut_d` - the nut sits on the **outside** face, unlike `button_body_d` which is clearance
+  underneath. It is what `label_offset` is derived from: the lettering is pushed `label_gap` clear
+  of the nut, not of the hole, because the nut is wider than the hole and a driver on it is wider
+  again. Get this wrong and the nuts sit on the writing.
 - `split_clear` - the gap the seam keeps in front of the nearest wall opening. `split_max_depth`
   caps how deep the panel gets and `split_fit` is the clearance where the panel's posts enter the
   shell.

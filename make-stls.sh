@@ -19,16 +19,15 @@ if [[ -z ${OPENSCAD:-} ]]; then
   exit 1
 fi
 
-PARTS_ALL=(body panel lid labels base speaker_ring)
+PARTS_ALL=(body panel lid base speaker_ring)
+PLATE=(print_plate)
 
 usage() {
   cat <<EOF
 usage: $(basename "$0") [parts|plate] [openscad options]
 
-  parts    the printed parts loose at the origin, to stl/ (default)
-  plate    the same parts already rotated and laid out on the bed, to stl/plate/. Load all of
-           them into the slicer at once: they arrive as separate objects in the right places
-           and orientations, so each can take its own filament
+  parts    the printed parts one STL each, to stl/ (default)
+  plate    all of them on one bed as a single STL, already rotated so nothing needs supports
 
 Trailing options pass straight to openscad:
   $(basename "$0") parts -D 'pcb_w=77' -D 'pcb_d=33'
@@ -46,12 +45,7 @@ case ${1:-} in
   ''|-*) ;;                     # no target given, or straight to openscad options
   *) echo "unknown target: $1" >&2; usage >&2; exit 1 ;;
 esac
-PARTS=("${PARTS_ALL[@]}")
-EXTRA=(-D on_plate=false)
-if [[ $SEL == plate ]]; then
-  OUT=$OUT/plate
-  EXTRA=(-D on_plate=true)
-fi
+if [[ $SEL == plate ]]; then PARTS=("${PLATE[@]}"); else PARTS=("${PARTS_ALL[@]}"); fi
 LOGS=$OUT/logs
 
 mkdir -p "$LOGS"
@@ -60,7 +54,7 @@ probe=$LOGS/params.log
 
 # Resolve the sizes once up front. This also catches a bad override before any real work, because
 # openscad only warns about an undefined variable and still exits 0 with a quietly wrong STL.
-"$OPENSCAD" -o "$LOGS/probe.stl" -D 'part="none"' "${EXTRA[@]}" "$@" "$SCAD" >"$probe" 2>&1
+"$OPENSCAD" -o "$LOGS/probe.stl" -D 'part="none"' "$@" "$SCAD" >"$probe" 2>&1
 rm -f "$LOGS/probe.stl"
 if grep -qE 'ERROR|WARNING' "$probe"; then
   echo "bad parameters:" >&2
@@ -78,7 +72,7 @@ for part in "${PARTS[@]}"; do
   log=$LOGS/$part.log
   start=$SECONDS
 
-  if ! "$OPENSCAD" -o "$stl" -D "part=\"$part\"" "${EXTRA[@]}" "$@" "$SCAD" >"$log" 2>&1; then
+  if ! "$OPENSCAD" -o "$stl" -D "part=\"$part\"" "$@" "$SCAD" >"$log" 2>&1; then
     status=FAILED
   elif grep -qE 'ERROR|WARNING' "$log"; then
     status=WARNED

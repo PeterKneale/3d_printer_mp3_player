@@ -3,12 +3,8 @@
 // The shell is sized by its contents: there is nothing to ask for, only components to describe.
 
 /* [Output] */
-part = "assembly";        // [assembly, body, panel, lid, labels, base, speaker_ring, print_plate, none]
+part = "assembly";        // [assembly, body, panel, lid, base, speaker_ring, print_plate, none]
 explode = 30;             // lid lift in the assembly view
-// Export one part already rotated and positioned where print_plate puts it. Render the parts one
-// by one with this on and the slicer takes them as separate objects on a laid-out bed, so each can
-// have its own filament.
-on_plate = false;
 
 /* [Shell] */
 wall = 2.4;
@@ -65,14 +61,16 @@ grille_gap = 1.6;
 
 /* [Buttons - SP0710] */
 button_hole_d = 7.2;      // 7 mm cutout plus fit
-button_body_d = 10.5;     // nut and flange clearance under the lid
+button_body_d = 10.5;     // body and shoulder clearance under the lid
+button_nut_d = 12;        // nut across corners, and it sits on the outside face
 button_panel_t = 2.0;     // local lid thickness at each button
 button_pitch = 22;
 button_row_y = 3;         // row offset from the lid centre
 button_labels = ["PREV", "PLAY", "NEXT"];
-label_size = 4.0;
-label_h = 0.6;            // raised off the lid, printed in a second filament
-label_offset = 7.5;
+label_size = 4.5;
+label_h = 0.8;            // how far the lettering stands proud of the lid
+label_gap = 3.0;          // lettering clear of the nut above it. Generous on purpose: the letters
+                          // stand proud, and a driver on the nut is wider than the nut
 
 /* [Connector openings] */
 // Openings in the jack-end wall. [fraction across the board from the back edge,
@@ -134,6 +132,9 @@ spk_pcd = speaker_d + 2 * speaker_boss_gap + speaker_boss_d;
 grille_d = speaker_d - 2 * grille_margin;
 
 button_count = len(button_labels);
+// Clear of the nut, not of the hole. text() gives no metrics, so the block is taken as label_size
+// tall, which overstates it by about 5% and errs the right way.
+label_offset = button_nut_d / 2 + label_gap + label_size / 2;
 btn_req_w = (button_count - 1) * button_pitch + button_body_d + 6;
 
 // Depth is set by the front panel, not the board. Every wall opening is placed off the board and
@@ -158,6 +159,11 @@ lid_z = out_h - lid_t;
 
 px = cav_w / 2 - post_d / 2;
 py = cav_d / 2 - post_d / 2;
+corner_ri = max(corner_r - wall, 0.5);   // cavity corner fillet, and its arc centre
+corner_cx = cav_w / 2 - corner_ri;
+corner_cy = cav_d / 2 - corner_ri;
+// A post drawn about the corner's own arc centre, big enough to still carry the screw at px, py.
+post_r = norm([px - corner_cx, py - corner_cy]) + post_d / 2;
 base_post_h = pcb_seat_h;      // the board underside is as high as a base post may reach
 plate_gap = 8;
 ring_w = speaker_d + 4;
@@ -284,26 +290,36 @@ module pcb_mount_geo() {
 // jack tip 0.3 mm off the right. The four base posts are its seat instead.
 module lid_ledge() {
     translate([0, 0, lid_z - ledge_h]) difference() {
-        rbox(cav_w, cav_d, ledge_h, max(corner_r - wall, 0.5));
+        rbox(cav_w, cav_d, ledge_h, corner_ri);
         translate([0, 0, -1]) rbox(cav_w - 2 * ledge_w, cav_d - 2 * ledge_w, ledge_h + 2,
-                                   max(corner_r - wall - ledge_w, 0.5));
+                                   max(corner_ri - ledge_w, 0.5));
     }
 }
 
 module cavity_clip() {
     translate([0, 0, floor_t])
-        rbox(cav_w, cav_d, cav_h - ledge_h, max(corner_r - wall, 0.5));
+        rbox(cav_w, cav_d, cav_h - ledge_h, corner_ri);
     translate([0, 0, lid_z - ledge_h])
         rbox(cav_w - 2 * ledge_w, cav_d - 2 * ledge_w, ledge_h,
-             max(corner_r - wall - ledge_w, 0.5));
+             max(corner_ri - ledge_w, 0.5));
+}
+
+// Posts fill the corner rather than standing off it. A cylinder tangent to two walls is joined to
+// them along a line each and leaves a void behind it in the fillet; drawn about the corner's own
+// arc centre and clipped to the cavity, the same post meets the walls over an area instead.
+module post_profile(sx, sy, g = 0) {
+    offset(g) intersection() {
+        translate([sx * corner_cx, sy * corner_cy]) circle(r = post_r);
+        rrect(cav_w, cav_d, corner_ri);
+    }
 }
 
 // side 0 both, -1 the front pair that goes with the panel, 1 the back pair. g grows the post into
 // the clearance the shell needs, because the panel's pair reaches back past the seam.
 module lid_posts(side = 0, g = 0) {
     for (sx = [-1, 1], sy = [-1, 1]) if (side == 0 || sy == side)
-        translate([sx * px, sy * py, lid_z - post_h - g])
-            cylinder(d = post_d + 2 * g, h = post_h + g);
+        translate([0, 0, lid_z - post_h - g])
+            linear_extrude(post_h + g) post_profile(sx, sy, g);
 }
 
 module lid_post_holes(side = 0) {
@@ -314,8 +330,8 @@ module lid_post_holes(side = 0) {
 
 module base_posts(side = 0, g = 0) {
     for (sx = [-1, 1], sy = [-1, 1]) if (side == 0 || sy == side)
-        translate([sx * px, sy * py, floor_t - g])
-            cylinder(d = post_d + 2 * g, h = base_post_h + g);
+        translate([0, 0, floor_t - g])
+            linear_extrude(base_post_h + g) post_profile(sx, sy, g);
 }
 
 module base_post_holes(side = 0) {
@@ -369,7 +385,7 @@ module shell() {
         union() {
             difference() {
                 rbox(out_w, out_d, out_h, corner_r);
-                translate([0, 0, -1]) rbox(cav_w, cav_d, out_h + 2, max(corner_r - wall, 0.5));
+                translate([0, 0, -1]) rbox(cav_w, cav_d, out_h + 2, corner_ri);
             }
             lid_ledge();
         }
@@ -417,7 +433,7 @@ module panel() {
 module base() {
     difference() {
         union() {
-            rbox(lid_w, lid_d, floor_t, max(corner_r - wall, 0.5));
+            rbox(lid_w, lid_d, floor_t, corner_ri);
             pcb_mount_geo();
         }
         for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, 0]) {
@@ -435,75 +451,55 @@ module button_row() {
 }
 
 module lid() {
-    translate([0, 0, lid_z]) difference() {
-        rbox(lid_w, lid_d, lid_t, max(corner_r - wall, 0.5));
-        button_row() translate([0, 0, -1]) cylinder(d = button_hole_d, h = lid_t + 2);
-        button_row() translate([0, 0, -eps])
-            cylinder(d = button_body_d, h = lid_t - button_panel_t + eps);
-        for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, -1]) {
-            cylinder(d = lid_screw_d + 1.0, h = lid_t + 2);
+    translate([0, 0, lid_z]) union() {
+        difference() {
+            rbox(lid_w, lid_d, lid_t, corner_ri);
+            button_row() translate([0, 0, -1]) cylinder(d = button_hole_d, h = lid_t + 2);
+            button_row() translate([0, 0, -eps])
+                cylinder(d = button_body_d, h = lid_t - button_panel_t + eps);
+            for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, -1]) {
+                cylinder(d = lid_screw_d + 1.0, h = lid_t + 2);
             translate([0, 0, 1 + lid_t - lid_head_h])
                 cylinder(d1 = lid_screw_d + 1.0, d2 = lid_head_d, h = lid_head_h + eps);
+            }
         }
+        // Labels stand label_h proud of the top face rather than being cut into it.
+        for (i = [0:button_count - 1])
+            translate([(i - (button_count - 1) / 2) * button_pitch,
+                       btn_y - label_offset, lid_t - eps])
+                linear_extrude(label_h + eps)
+                    text(button_labels[i], size = label_size, halign = "center",
+                         valign = "center");
     }
-}
-
-// Raised, and its own part, so it prints in a second filament on top of the finished lid.
-module labels() {
-    for (i = [0:button_count - 1])
-        translate([(i - (button_count - 1) / 2) * button_pitch, btn_y - label_offset, out_h - eps])
-            linear_extrude(label_h + eps)
-                text(button_labels[i], size = label_size, halign = "center", valign = "center");
 }
 
 module ring_placed() {
     place_spk_front() translate([0, 0, speaker_flange_t]) speaker_ring();
 }
 
-// Where each part sits on the bed, largest face down: both shell halves lie on their backs, which
-// is what puts the grille and the card slot flat on the plate instead of up a wall.
-module plate_place(which) {
+// Every part on one bed, largest face down: both shell halves lie on their backs, which is what
+// puts the grille and the card slot flat on the plate instead of up a wall.
+module print_plate() {
     g = plate_gap;
     col2 = out_w + g;
-    if (which == "body")
-        translate([out_w / 2, 0, out_d / 2]) rotate([-90, 0, 0]) children();
-    else if (which == "panel")
-        translate([out_w / 2, 2 * out_h + g, out_d / 2]) rotate([90, 0, 0]) children();
-    else if (which == "lid" || which == "labels")
-        translate([col2 + lid_w / 2, lid_d / 2, -lid_z]) children();
-    else if (which == "base")
-        translate([col2 + lid_w / 2, lid_d + g + lid_d / 2, 0]) children();
-    else if (which == "speaker_ring")
-        translate([col2 + ring_w / 2, 2 * (lid_d + g) + ring_w / 2, 0]) children();
-}
-
-module named_part(n) {
-    if (n == "body") body();
-    else if (n == "panel") panel();
-    else if (n == "lid") lid();
-    else if (n == "labels") labels();
-    else if (n == "base") base();
-    else if (n == "speaker_ring") speaker_ring();
-}
-
-// The whole bed as one solid, for a single-filament print. Labels ride on the lid here.
-module print_plate() {
-    plate_place("body") body();
-    plate_place("panel") panel();
-    plate_place("lid") { lid(); labels(); }
-    plate_place("base") base();
-    plate_place("speaker_ring") speaker_ring();
+    translate([out_w / 2, 0, out_d / 2]) rotate([-90, 0, 0]) body();
+    translate([out_w / 2, 2 * out_h + g, out_d / 2]) rotate([90, 0, 0]) panel();
+    translate([col2 + lid_w / 2, lid_d / 2, -lid_z]) lid();
+    translate([col2 + lid_w / 2, lid_d + g + lid_d / 2, 0]) base();
+    translate([col2 + ring_w / 2, 2 * (lid_d + g) + ring_w / 2, 0]) speaker_ring();
 }
 
 /* ---------------- output ---------------- */
-if (part == "print_plate") print_plate();
-else if (on_plate) plate_place(part) named_part(part);
-else if (part != "assembly") named_part(part);
+if (part == "body") body();
+else if (part == "panel") panel();
+else if (part == "lid") lid();
+else if (part == "base") base();
+else if (part == "speaker_ring") speaker_ring();
+else if (part == "print_plate") print_plate();
 else if (part == "assembly") {
     color("SteelBlue") body();
     color("CadetBlue") translate([0, -explode, 0]) panel();
     color("Gainsboro") translate([0, 0, explode]) lid();
-    color("Firebrick") translate([0, 0, explode]) labels();
     color("Tan") translate([0, 0, -explode]) base();
     color("DarkOrange") translate([0, -explode / 2, 0]) ring_placed();
 }
