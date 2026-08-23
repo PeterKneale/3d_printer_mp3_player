@@ -20,22 +20,19 @@ if [[ -z ${OPENSCAD:-} ]]; then
   exit 1
 fi
 
-GAUGES=(pcb_gauge end_gauge)
 BODY=(body lid speaker_ring)
 PLATE=(print_plate)
 
 usage() {
   cat <<EOF
-usage: $(basename "$0") [gauges|parts|all] [openscad options]
+usage: $(basename "$0") [parts|plate] [openscad options]
 
-  gauges   pcb_gauge, end_gauge          check these against the board first
-  parts    body, lid, speaker_ring       the enclosure itself
-  all      both (default)
-  plate    print_plate                   all five on one bed, 201 x 112 mm
+  parts    body, lid, speaker_ring       the three printed parts (default)
+  plate    print_plate                   all three on one bed, 177 x 112 mm
 
 Trailing options pass straight to openscad:
   $(basename "$0") parts -D 'pcb_w=77' -D 'pcb_d=33'
-  $(basename "$0") all -D 'grille_style="rings"' -D 'pcb_flip=false'
+  $(basename "$0") plate -D 'grille_style="rings"' -D 'pcb_flip=false'
 EOF
 }
 
@@ -43,15 +40,15 @@ case ${1:-} in
   -h|--help) usage; exit 0 ;;
 esac
 
-SEL=all
+SEL=parts
 case ${1:-} in
-  gauges|parts|all|plate) SEL=$1; shift ;;
+  parts|all|plate) SEL=$1; shift ;;
+  ''|-*) ;;                     # no target given, or straight to openscad options
+  *) echo "unknown target: $1" >&2; usage >&2; exit 1 ;;
 esac
 case $SEL in
-  gauges) PARTS=("${GAUGES[@]}") ;;
-  parts)  PARTS=("${BODY[@]}") ;;
-  plate)  PARTS=("${PLATE[@]}") ;;
-  all)    PARTS=("${GAUGES[@]}" "${BODY[@]}") ;;
+  plate) PARTS=("${PLATE[@]}") ;;
+  *)     PARTS=("${BODY[@]}") ;;
 esac
 
 mkdir -p "$LOGS"
@@ -110,8 +107,4 @@ if (( ${#failed[@]} )); then
 fi
 
 printf '\n%s\n' "${#PARTS[@]} parts written to $OUT/."
-if [[ $SEL == gauges ]]; then
-  printf '%s\n' "Check both against the board, then: $(basename "$0") parts"
-else
-  printf '%s\n' "No supports, 0.2 mm layers, body open side up, rest flat."
-fi
+printf '%s\n' "No supports, 0.2 mm layers, body open side up, rest flat."

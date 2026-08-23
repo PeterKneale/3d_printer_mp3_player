@@ -3,7 +3,7 @@
 // Shell auto-grows past the requested size when the contents need more room.
 
 /* [Output] */
-part = "assembly";        // [assembly, body, lid, speaker_ring, pcb_gauge, end_gauge, print_plate, none]
+part = "assembly";        // [assembly, body, lid, speaker_ring, print_plate, none]
 explode = 30;             // lid lift in the assembly view
 
 /* [Requested outer size] */
@@ -171,10 +171,6 @@ pcb_x = -rot * (cav_w / 2 - pcb_gap_left - pcb_w / 2);
 pcb_y = -rot * (cav_d / 2 - sd_gap - pcb_d / 2);
 sd_reach = wall + sd_gap + sd_from_edge;
 
-eg_lo = min(abs(pcb_x + rot * (sd_at - 0.5) * pcb_w) - sd_slot_w / 2 - 4, out_w / 2 - 34);
-eg_w = out_w / 2 - eg_lo;
-eg_cx = (pcb_flip ? 1 : -1) * (eg_lo + eg_w / 2);
-
 echo(str("outer  ", out_w, " x ", out_d, " x ", out_h, " mm"));
 echo(str("cavity ", cav_w, " x ", cav_d, " x ", cav_h, " mm"));
 echo(str("button pitch ", btn_pitch, " mm"));
@@ -323,19 +319,6 @@ module pcb_mount_geo() {
     translate([pcb_x, pcb_y, floor_t]) rotate([0, 0, pcb_flip ? 180 : 0]) pcb_mounts();
 }
 
-// Throwaway plate for checking the board fits before committing to the body print.
-module pcb_gauge() {
-    t = 2;
-    difference() {
-        union() {
-            linear_extrude(t) rrect(pcb_w + 2 * lip_t + 10, pcb_d + 2 * lip_t + 10, 3);
-            translate([0, 0, t]) pcb_mounts();
-        }
-        for (p = pcb_hole_pts) translate([p[0], p[1], -1])
-            cylinder(d = pcb_screw_d, h = t + pcb_seat_h + 2);
-    }
-}
-
 /* ---------------- shell details ---------------- */
 module lid_ledge() {
     translate([0, 0, lid_z - ledge_h]) difference() {
@@ -458,37 +441,20 @@ module ring_placed() {
         place_spk_lid() translate([0, 0, speaker_flange_t]) speaker_ring();
 }
 
-// The real connector end, sliced off the body: proves every wall opening against the board.
-// Reaches far enough along to take in the card slot as well as the jack and USB.
-module end_gauge() {
-    zt = floor_t + pcb_seat_h + pcb_t + 14;
-    intersection() {
-        body();
-        mirror([pcb_flip ? 0 : 1, 0, 0])
-            translate([eg_lo, -out_d / 2 - 1, -1]) cube([out_w, out_d + 2, zt + 1]);
-    }
-}
-
-// Every part on one bed, gauges included. Check the echoed footprint against your printer.
+// All three parts on one bed. Check the echoed footprint against your printer.
 module print_plate() {
     g = 8;
-    gw = pcb_w + 2 * lip_t + 10;
     rw = speaker_d + 4;
     r1 = max(out_d, lid_d);
-    y2 = r1 / 2 + g + rw / 2;
     translate([out_w / 2, 0, 0]) body();
     translate([out_w + g + lid_w / 2, 0, -lid_z]) lid();
-    translate([gw / 2, y2, 0]) pcb_gauge();
-    translate([gw + g + rw / 2, y2, 0]) speaker_ring();
-    translate([gw + g + rw + g + eg_w / 2 - eg_cx, y2, 0]) end_gauge();
+    translate([rw / 2, r1 / 2 + g + rw / 2, 0]) speaker_ring();
 }
 
 /* ---------------- output ---------------- */
 if (part == "body") body();
 else if (part == "lid") lid();
 else if (part == "speaker_ring") speaker_ring();
-else if (part == "pcb_gauge") pcb_gauge();
-else if (part == "end_gauge") end_gauge();
 else if (part == "print_plate") print_plate();
 else if (part == "assembly") {
     color("SteelBlue") body();

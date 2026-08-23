@@ -28,40 +28,19 @@ the parametric sizes first and prints them, refuses to build if an override is b
 OpenSCAD warning or a non-manifold result, so a run that reports `ok` is a run you can slice.
 
 ```sh
-./make-stls.sh gauges   # pcb_gauge, end_gauge     check these against the board first
-./make-stls.sh parts    # body, lid, speaker_ring  the enclosure itself
-./make-stls.sh          # both
-./make-stls.sh plate    # all five on one bed, 201 x 112 mm, needs a 220 bed
+./make-stls.sh          # body, lid, speaker_ring  the three printed parts
+./make-stls.sh plate    # all three on one bed, 177 x 112 mm, needs a 200 bed
 ./make-stls.sh --help
 ```
 
 Trailing arguments pass straight to openscad, so variants build the same way:
 
 ```sh
-./make-stls.sh parts -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh all -D 'grille_style="rings"' -D 'pcb_flip=false'
+./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
+./make-stls.sh plate -D 'grille_style="rings"' -D 'pcb_flip=false'
 ```
 
 Set `OPENSCAD=/path/to/openscad` if it is not found automatically.
-
-## Print the two gauges first
-
-```sh
-./make-stls.sh gauges
-```
-
-Both are small, flat on the bed and need no supports. Between them they prove every number in this
-file that came from a photo rather than a caliper, so run them before committing to the 87 mm body.
-
-- **pcb_gauge** is a 2 mm plate with the same rails and both screw posts as the body floor. The
-  board should drop between the rails with a little side play and both posts should sit under their
-  holes, which land at 28.0 mm and 32.1 mm either side of the board centre. Fixes: `pcb_hole_at`.
-- **end_gauge** is the real connector end of the body, sliced off it, so it carries that wall with
-  both connector openings, the card slot in the adjacent wall, the floor, one screw post and the
-  rails including their interruption. Seat the board in it and check the jack and micro USB line up
-  and that a real cable seats fully, then try the card in and out of its slot. Fixes: the first
-  field of each `pcb_connectors` entry for position along the wall, the second for height, and
-  `sd_at` for the card slot.
 
 ## Board size
 
@@ -82,12 +61,12 @@ posts, card slot and connector openings all follow.
 ./make-stls.sh parts
 ```
 
-Three parts: `body`, `lid` and `speaker_ring`. Beyond those, `part="print_plate"` puts all five
-parts including the gauges on one bed, `part="assembly"` is the preview and `part="none"` emits
-nothing so the file can be `include`d as a library. Any single part renders on its own with
+Three parts: `body`, `lid` and `speaker_ring`. Beyond those, `part="print_plate"` puts all three on
+one bed, `part="assembly"` is the preview and `part="none"` emits nothing so the file can be
+`include`d as a library. Any single part renders on its own with
 `openscad -o x.stl -D 'part="lid"' jukebox.scad`.
 
-No supports needed: the body prints open side up, the lid, ring and both gauges print flat.
+No supports needed: the body prints open side up, the lid and ring print flat.
 0.2 mm layers, 3 perimeters. The grille bridges over 4 mm holes, which prints clean.
 
 ## Size, and how to shrink it
@@ -123,8 +102,8 @@ So there are three ways to change music, and you will mostly use the first.
 Plug in, drag files, unplug. The opening is stepped, 13 x 9 mm through the wall with a 16 x 12 mm
 relief 1.4 mm deep outside, because the receptacle sits about 5.5 mm behind the outer face while a
 micro-B tongue is only about 6 mm long. Without the relief a cable with a fat overmould bottoms out
-before it seats. Prove it with `end_gauge` and a real cable. Check whether that port also carries
-power: the header pins marked G and V are the documented 5 V input.
+before it seats. Confirmed with a real cable on the printed part. Check whether that port also
+carries power: the header pins marked G and V are the documented 5 V input.
 
 **Through the card slot, box shut.** `sd_slot` is on by default: a 13 x 3.2 mm letterbox in the
 wall the holder faces, on the card plane. `pcb_flip = true` (the default) turns the board 180
@@ -139,8 +118,7 @@ works, needs no slot.
 
 One knock-on: the holder overhangs the seat rail on the card side, so that rail is interrupted over
 `sd_span` and the board is carried by the rest of it. The two screw posts land at 5.7 mm and
-65.1 mm from the jack end, clear of the 15.2 to 32.3 mm the holder occupies, but confirm that on
-`pcb_gauge` before printing the body.
+65.1 mm from the jack end, clear of the 15.2 to 32.3 mm the holder occupies.
 
 ## Assembly
 
@@ -204,13 +182,16 @@ Practicalities, because the pads are 0.6 to 0.9 mm fillets:
   the box while you work.
 - The SP0710 has two solder tags and no polarity, so either wire to either tag.
 
-## Parameters worth checking before you print
+## Parameters
+
+Every dimension below has been confirmed against the real parts on a printed enclosure. They are
+here because they are what you change if you build this with a different board or speaker.
 
 - `pcb_w`, `pcb_d` - 69 x 32, measured. Everything else scales off them.
-- `pcb_connectors` - the two openings in the jack-end wall. Their positions along the wall come
-  from the photo, but their **heights above the board are guesses**: a top-down photo cannot show
-  how high the jack axis or the USB shell sit. Measure both and correct the second field. The last
-  field is the outer relief depth, which is what lets a chunky USB cable seat.
+- `pcb_connectors` - the two openings in the jack-end wall. Positions along the wall came off the
+  product photo and the heights were estimated, since a top-down photo cannot show how high the jack
+  axis or the USB shell sit, but both were confirmed on the printed part. The last field is the
+  outer relief depth, which is what lets a chunky USB cable seat.
 - `pcb_mount` - `both` (default) is rails plus screw posts, and the rails alone hold the board if
   the posts turn out to be wrong.
 - `pcb_flip` - which wall the card slot and the connectors land on. See above.
