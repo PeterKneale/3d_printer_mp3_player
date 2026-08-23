@@ -6,22 +6,48 @@ OpenSCAD Customizer (Window > Customizer), or override any variable from the CLI
 Current size: **86.8 x 42.8 x 87 mm**. Every render echoes the real size and the resolved PCB
 mount positions, so check the console after any change.
 
+![Rotating preview](preview.gif)
+
+Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png.sh`.
+
 ## Bill of materials
 
-| Part | Jaycar code | Modelled as |
-|---|---|---|
-| MP3 player module with button controls | XC3748 | 69 x 32 mm bare board, see below |
-| All purpose speaker, 57 mm, 8 ohm | AS3000 | 57 mm dia, 20 mm deep, 2.5 mm rim |
-| Red miniature pushbutton, SPST momentary | SP0710 x3 | 7 mm panel cutout |
-| M3 x 10 self-tapping screws | | 4 off, lid |
-| M3 x 6 self-tapping screws | | 4 off, speaker ring. Not 8 mm, see below |
-| M2 screw | | 2 off, PCB |
+| Part                                     | Jaycar code | Modelled as                              |
+| ---------------------------------------- | ----------- | ---------------------------------------- |
+| MP3 player module with button controls   | XC3748      | 69 x 32 mm bare board, see below         |
+| All purpose speaker, 57 mm, 8 ohm        | AS3000      | 57 mm dia, 20 mm deep, 2.5 mm rim        |
+| Red miniature pushbutton, SPST momentary | SP0710 x3   | 7 mm panel cutout                        |
+| M3 x 10 self-tapping screws              |             | 4 off, lid                               |
+| M3 x 6 self-tapping screws               |             | 4 off, speaker ring. Not 8 mm, see below |
+| M2 screw                                 |             | 2 off, PCB                               |
+
+## Building the STLs
+
+`make-stls.sh` renders into `stl/`, keeping each render's console output in `stl/logs/`. It resolves
+the parametric sizes first and prints them, refuses to build if an override is bad, and fails on any
+OpenSCAD warning or a non-manifold result, so a run that reports `ok` is a run you can slice.
+
+```sh
+./make-stls.sh gauges   # pcb_gauge, end_gauge     check these against the board first
+./make-stls.sh parts    # body, lid, speaker_ring  the enclosure itself
+./make-stls.sh          # both
+./make-stls.sh plate    # all five on one bed, 201 x 112 mm, needs a 220 bed
+./make-stls.sh --help
+```
+
+Trailing arguments pass straight to openscad, so variants build the same way:
+
+```sh
+./make-stls.sh parts -D 'pcb_w=77' -D 'pcb_d=33'
+./make-stls.sh all -D 'grille_style="rings"' -D 'pcb_flip=false'
+```
+
+Set `OPENSCAD=/path/to/openscad` if it is not found automatically.
 
 ## Print the two gauges first
 
 ```sh
-openscad -o pcb_gauge.stl -D 'part="pcb_gauge"' jukebox.scad
-openscad -o end_gauge.stl -D 'part="end_gauge"' jukebox.scad
+./make-stls.sh gauges
 ```
 
 Both are small, flat on the bed and need no supports. Between them they prove every number in this
@@ -53,17 +79,13 @@ posts, card slot and connector openings all follow.
 ## Parts to print
 
 ```sh
-openscad -o body.stl -D 'part="body"'         jukebox.scad
-openscad -o lid.stl  -D 'part="lid"'          jukebox.scad
-openscad -o ring.stl -D 'part="speaker_ring"' jukebox.scad
+./make-stls.sh parts
 ```
 
-Or render everything, gauges first, with `./make-stls.sh`. It writes all five parts to `stl/`,
-keeps each render's console output in `stl/logs/`, and passes any extra arguments through to
-openscad, so `./make-stls.sh -D 'speaker_d=40'` works.
-
-`part="print_plate"` lays the three out side by side, `part="assembly"` is the preview and
-`part="none"` emits nothing so the file can be `include`d as a library.
+Three parts: `body`, `lid` and `speaker_ring`. Beyond those, `part="print_plate"` puts all five
+parts including the gauges on one bed, `part="assembly"` is the preview and `part="none"` emits
+nothing so the file can be `include`d as a library. Any single part renders on its own with
+`openscad -o x.stl -D 'part="lid"' jukebox.scad`.
 
 No supports needed: the body prints open side up, the lid, ring and both gauges print flat.
 0.2 mm layers, 3 perimeters. The grille bridges over 4 mm holes, which prints clean.
@@ -77,14 +99,14 @@ contents need the room. Two things push it past 80 x 40 x 35.
 - **Height.** A 57 mm speaker needs a panel at least 63 mm across in *both* directions. On the
   front face that sets the height, and the electronics bay below it adds the rest.
 
-| Change | Result |
-|---|---|
-| as shipped | 86.8 x 42.8 x 87 |
-| `-D 'pcb_over_right_f=0.015'`, headers trimmed flush | 81.1 x 42.8 x 87 |
-| `-D 'speaker_d=40' -D 'speaker_depth=12'` | 86.8 x 42.8 x 70 |
-| both of the above | 81.1 x 42.8 x 70 |
+| Change                                                     | Result           |
+| ---------------------------------------------------------- | ---------------- |
+| as shipped                                                 | 86.8 x 42.8 x 87 |
+| `-D 'pcb_over_right_f=0.015'`, headers trimmed flush       | 81.1 x 42.8 x 87 |
+| `-D 'speaker_d=40' -D 'speaker_depth=12'`                  | 86.8 x 42.8 x 70 |
+| both of the above                                          | 81.1 x 42.8 x 70 |
 | `-D 'speaker_face="top"'`, speaker fires up out of the lid | 86.8 x 88.3 x 44 |
-| top-firing 40 mm speaker | 86.8 x 71.3 x 36 |
+| top-firing 40 mm speaker                                   | 86.8 x 71.3 x 36 |
 
 ## Changing the music
 
@@ -132,12 +154,55 @@ One knock-on: the holder overhangs the seat rail on the card side, so that rail 
    fix it with 2 M2 screws into the posts. The board holes scale to about 3.7 mm in the photo, so
    an M2 head will pull straight through: use a washer, or step up to M3 and set
    `pcb_screw_d = 2.6`.
-4. Wire the three pushbuttons across the three tact switches you need. All three are in the
-   right-hand column of the 2 x 3 grid: PRE- at the top, NEXT/+ in the middle, PLAY/PAUSE at the
-   bottom. Mount the buttons in the lid and fit their nuts. The lid is thinned to `button_panel_t`
-   (2 mm) around each hole so the nuts still reach the thread.
+4. Wire the three pushbuttons across the three tact switches you need, see below. Mount the buttons
+   in the lid and fit their nuts. The lid is thinned to `button_panel_t` (2 mm) around each hole so
+   the nuts still reach the thread.
 5. Speaker leads go to the S-OUT pair on the header end.
 6. Drop the lid onto its ledge and fix with 4 screws.
+
+## Wiring the buttons
+
+The three switches you need are the whole right-hand column of the 2 x 3 grid: PRE- at the top,
+NEXT/+ in the middle, PLAY/PAUSE at the bottom. Wire each panel button in parallel across the legs
+of its onboard switch. Leave the onboard switches in place, nothing here is destructive and both
+will work.
+
+**Take one wire from each side of the switch, not two from the same side.** These are standard 6 mm
+tact switches: 4 legs, measured at 7.2 mm apart across the body and 4.6 mm along it, and on this
+board they stick out towards the jack end and the header end. Four legs but only two terminals,
+because each terminal has two legs for mechanical stability, so two of the four are already shorted
+inside the switch.
+
+```
+   jack end            header end
+        1 o----------o 3        1+2 are one terminal
+          |  6x6mm   |          3+4 are the other
+        2 o----------o 4        wire 1+4, or 2+3
+```
+
+Pick the two **diagonally opposite** legs and you cannot get it wrong: diagonal legs fall in
+different terminals under either possible internal pairing, so you do not need to know which
+convention your switches follow. Two legs from the same side is a permanent short, and the module
+will read that button as held down from the moment it powers up.
+
+With a multimeter it is a ten second check: the two legs on one side should beep with the button
+untouched, and across the body should be open until pressed.
+
+**Check for a common ground first.** The YX5200 pulls its button inputs up and switches them to
+ground, so one side of every button is very likely a shared rail. Probe continuity between a leg of
+PLAY/PAUSE and a leg of NEXT/+. If they beep, you need 4 wires rather than 6: one common return
+plus three signals.
+
+Practicalities, because the pads are 0.6 to 0.9 mm fillets:
+
+- 28 to 30 AWG stranded or enamelled wire. Thicker wire levers the leg off the pad.
+- Tin the leg, tin the wire, tack them together, do not dwell.
+- Hot glue over each joint once tested. These wires get tugged every time the lid comes off, and a
+  lifted pad on this board is not really repairable.
+- Make the wires **150 to 200 mm**, not the 90 mm the box needs. The buttons live in the lid and the
+  board is screwed to the floor, so you want enough slack to lift the lid clear and set it beside
+  the box while you work.
+- The SP0710 has two solder tags and no polarity, so either wire to either tag.
 
 ## Parameters worth checking before you print
 
