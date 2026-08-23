@@ -10,6 +10,20 @@ mount positions, so check the console after any change.
 
 Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png.sh`.
 
+## Contents
+
+- [Bill of materials](#bill-of-materials)
+- [Building the STLs](#building-the-stls)
+- [Board size](#board-size)
+- [Parts to print](#parts-to-print)
+- [Size, and how to shrink it](#size-and-how-to-shrink-it)
+- [Changing the music](#changing-the-music)
+- [Assembly](#assembly)
+- [Wiring the buttons](#wiring-the-buttons)
+- [Filling the card from YouTube](#filling-the-card-from-youtube)
+- [Parameters](#parameters)
+- [Layout](#layout)
+
 ## Bill of materials
 
 | Part                                     | Jaycar code | Modelled as                              |
@@ -181,6 +195,52 @@ Practicalities, because the pads are 0.6 to 0.9 mm fillets:
   board is screwed to the floor, so you want enough slack to lift the lid clear and set it beside
   the box while you work.
 - The SP0710 has two solder tags and no polarity, so either wire to either tag.
+
+## Filling the card from YouTube
+
+`yt-dlp` pulls the audio down and `rsync` is what puts it on the card without Apple metadata riding
+along. Keep a staging folder on the Mac, treat the card as a copy of it, and the card never
+accumulates anything you did not put there.
+
+```sh
+brew install yt-dlp ffmpeg
+```
+
+Download a whole playlist as numbered mp3s. The public domain Famous Speeches list is a fair
+example, 84 tracks:
+
+```sh
+yt-dlp -x --audio-format mp3 \
+  -o "$HOME/Music/mp3card/%(playlist_index)02d-%(title)s.%(ext)s" \
+  "https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895"
+```
+
+A `watch?v=...&list=...` URL takes the whole playlist, because yt-dlp follows the `list` parameter
+whether or not `&index=` is on the end. Add `--no-playlist` for just that one video, or
+`--playlist-items 6` to pick one out by position.
+
+ID3 tags are left alone. yt-dlp writes nothing of its own beyond an encoder string, so whatever
+titles and artists the source carries survive onto the card. Pass `--embed-metadata` if you want it
+to fill in tags the source left empty.
+
+**The metadata to get rid of is Apple's.** FAT32 cannot store extended attributes, so a file
+carrying one lands on the card with a second `._name` file beside it, and a player that indexes
+every file it finds will list those as extra silent tracks. Strip them from the staging folder,
+then copy with `rsync`, which does not carry attributes across unless you ask for `-E`:
+
+```sh
+xattr -cr ~/Music/mp3card                           # drop quarantine and the rest
+rsync -rt --delete ~/Music/mp3card/ /Volumes/MP3S/  # copy, attributes left behind
+dot_clean -m /Volumes/MP3S                          # sweep any sidecar that still appeared
+diskutil eject /Volumes/MP3S
+```
+
+`--delete` makes the card an exact copy of the folder, so dropping a track locally drops it from the
+card as well. Both `rsync` and `dot_clean` will say they cannot read `.Trashes`. That is a directory
+macOS recreates on every mount and guards, the message is harmless and `dot_clean` still exits 0.
+
+Plain `cp` is the one to avoid. It copies every attribute, and even `cp -X` drags
+`com.apple.quarantine` across, which is enough on its own to produce a sidecar.
 
 ## Parameters
 
