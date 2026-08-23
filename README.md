@@ -244,11 +244,16 @@ every file it finds will list those as extra silent tracks. Strip them from the 
 then copy with `rsync`, which does not carry attributes across unless you ask for `-E`:
 
 ```sh
-xattr -cr ~/Music/mp3card                           # drop quarantine and the rest
-rsync -rt --delete ~/Music/mp3card/ /Volumes/MP3S/  # copy, attributes left behind
-dot_clean -m /Volumes/MP3S                          # sweep any sidecar that still appeared
+xattr -cr ~/Music/mp3card              # drop quarantine and the rest
+rsync -rt --delete --exclude='.DS_Store' --exclude='._*' --exclude='*.part' \
+  ~/Music/mp3card/ /Volumes/MP3S/      # copy, attributes left behind
+dot_clean -m /Volumes/MP3S             # sweep any sidecar that still appeared
 diskutil eject /Volumes/MP3S
 ```
+
+The three excludes are all things that turn up in the staging folder and have no business on the
+card. Opening the folder in Finder leaves a `.DS_Store`, and a download that gets interrupted
+leaves a `.part` behind, which `--delete` alone will happily mirror across.
 
 `--delete` makes the card an exact copy of the folder, so dropping a track locally drops it from the
 card as well. Both `rsync` and `dot_clean` will say they cannot read `.Trashes`. That is a directory
