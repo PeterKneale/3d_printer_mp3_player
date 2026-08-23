@@ -1,0 +1,16 @@
+ECHO: "outer  86.8433 x 42.8 x 87 mm"
+ECHO: "cavity 82.0433 x 38 x 81.6 mm"
+ECHO: "button pitch 22 mm"
+ECHO: "pcb 69 x 32, jack out 3.9537, headers out 6.7896 mm"
+ECHO: "pcb screw posts at [[-28.0485, -0.4896], [32.1264, 1.6096]] from board centre"
+ECHO: "sd card sits 4.5 mm inside the back wall"
+Geometries in cache: 141
+Geometry cache size in bytes: 651792
+CGAL Polyhedrons in cache: 29
+CGAL cache size in bytes: 4663750
+Total rendering time: 0:00:00.064
+   Top level object is a 3D object (manifold):
+   Status:     NoError
+   Genus:      62
+   Vertices:     4489
+   Facets:       9222
