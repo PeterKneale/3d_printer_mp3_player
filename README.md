@@ -3,12 +3,14 @@
 Parametric OpenSCAD enclosure for a Jaycar-parts MP3 jukebox. Open `jukebox.scad` and use the
 OpenSCAD Customizer (Window > Customizer), or override any variable from the CLI with `-D`.
 
-Current size: **86.8 x 42.8 x 87 mm**. Every render echoes the real size and the resolved PCB
+Current size: **86.8 x 42.5 x 91.6 mm**. Every render echoes the real size and the resolved PCB
 mount positions, so check the console after any change.
 
 ![Rotating preview](preview.gif)
 
-Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png.sh`.
+Rebuild the turntable with `./export_gif.sh`. `./export_png.sh` writes the still above and a set
+of straight-on views to [images/](images): front, back, left, right, top, bottom and an exploded
+three-quarter.
 
 ## Contents
 
@@ -18,6 +20,8 @@ Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png
   - [Building the STLs](#building-the-stls)
   - [Board size](#board-size)
   - [Parts to print](#parts-to-print)
+  - [The split shell](#the-split-shell)
+  - [The base insert](#the-base-insert)
   - [Size, and how to shrink it](#size-and-how-to-shrink-it)
   - [Changing the music](#changing-the-music)
   - [Assembly](#assembly)
@@ -25,6 +29,7 @@ Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png
   - [Filling the card from YouTube](#filling-the-card-from-youtube)
   - [Parameters](#parameters)
   - [Layout](#layout)
+  - [Views](#views)
 
 ## Bill of materials
 
@@ -33,9 +38,10 @@ Rebuild the preview with `./export_gif.sh`, or a single still with `./export_png
 | MP3 player module with button controls   | XC3748      | 69 x 32 mm bare board, see below         |
 | All purpose speaker, 57 mm, 8 ohm        | AS3000      | 57 mm dia, 20 mm deep, 2.5 mm rim        |
 | Red miniature pushbutton, SPST momentary | SP0710 x3   | 7 mm panel cutout                        |
-| M3 x 10 self-tapping screws              |             | 4 off, lid                               |
+| M3 x 10 self-tapping screws              |             | 8 off, 4 lid and 4 base                  |
 | M3 x 6 self-tapping screws               |             | 4 off, speaker ring. Not 8 mm, see below |
 | M2 screw                                 |             | 2 off, PCB                               |
+| Second filament, any colour              |             | the raised button labels                 |
 
 ## Building the STLs
 
@@ -44,8 +50,8 @@ the parametric sizes first and prints them, refuses to build if an override is b
 OpenSCAD warning or a non-manifold result, so a run that reports `ok` is a run you can slice.
 
 ```sh
-./make-stls.sh          # body, lid, speaker_ring  the three printed parts
-./make-stls.sh plate    # all three on one bed, 177 x 112 mm, needs a 200 bed
+./make-stls.sh          # the six parts loose, to stl/
+./make-stls.sh plate    # the same six laid out on the bed, to stl/plate/, 177 x 191 mm
 ./make-stls.sh --help
 ```
 
@@ -53,7 +59,7 @@ Trailing arguments pass straight to openscad, so variants build the same way:
 
 ```sh
 ./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh plate -D 'grille_style="rings"' -D 'pcb_flip=false'
+./make-stls.sh plate -D 'button_labels=["<<","||",">>"]'
 ```
 
 Set `OPENSCAD=/path/to/openscad` if it is not found automatically.
@@ -77,31 +83,92 @@ posts, card slot and connector openings all follow.
 ./make-stls.sh parts
 ```
 
-Three parts: `body`, `lid` and `speaker_ring`. Beyond those, `part="print_plate"` puts all three on
-one bed, `part="assembly"` is the preview and `part="none"` emits nothing so the file can be
-`include`d as a library. Any single part renders on its own with
-`openscad -o x.stl -D 'part="lid"' jukebox.scad`.
+Six parts: `body`, `panel`, `lid`, `labels`, `base` and `speaker_ring`. Each has one job. The body
+is walls and openings, the panel is the show face and the speaker, the base carries the board, the
+lid carries the buttons, the labels are the writing.
 
-No supports needed: the body prints open side up, the lid and ring print flat.
-0.2 mm layers, 3 perimeters. The grille bridges over 4 mm holes, which prints clean.
+No supports needed. Both shell halves print on their backs, which is their largest face and puts the
+grille and the card slot flat on the bed instead of up a wall. Everything else prints flat.
+0.2 mm layers, 3 perimeters.
+
+### A colour per part
+
+`./make-stls.sh plate` writes the same six parts to `stl/plate/`, each already rotated into its
+print orientation and moved to its own spot on a 177 x 191 mm bed. Load all six into the slicer at
+once and they arrive as separate objects, correctly placed, so you can give the front, the back, the
+lid, the base and the writing whatever filament you like. `labels` lands exactly on the lid's top
+face, which makes the raised PREV/PLAY/NEXT a colour change three layers from the end rather than a
+second object to align.
+
+For a single colour it makes no difference: print the same six, or render `part="print_plate"` for
+one merged solid of the whole bed.
+
+`part="assembly"` is the preview and `part="none"` emits nothing so the file can be `include`d as a
+library. Any single part renders on its own with `openscad -o x.stl -D 'part="lid"' jukebox.scad`,
+and adding `-D on_plate=true` puts it where the plate would.
+
+## The split shell
+
+The front comes off as its own part. Without it the speaker ring is unbuildable: its 4 screws face
+backwards down the length of a shut box and no screwdriver reaches them past the opposite wall. With
+the panel loose you lay it face down on the bench, drop the speaker in and drive the screws straight
+down.
+
+The seam is a plane across the box, placed automatically at `split_clear` in front of the frontmost
+wall opening so no connector cutout is ever cut in half. On the shipped numbers that puts it 6.9 mm
+back from the front face, which the render echoes on every build:
+
+```
+split seam at y -14.35, front panel 6.9 mm deep
+```
+
+Only the walls and the lid ledge are cut. Everything standing inside keeps one part whole and
+reaches past the seam into open space: the speaker mount and the front post of each pair go with the
+panel. That is what holds the box together. Each corner has a lid post above and a base post below,
+the front pair of both sets belongs to the panel, so the lid screw pulls the panel down from above
+and the base screw pulls it in from below. Nothing else is needed, and there are no fasteners on the
+show face.
+
+## The base insert
+
+The bottom is a plate with the same footprint and the same job as the lid: four M3 up into the base
+posts. The board lives on it, on two short rails and its two M2 screws, so the board and its wiring
+come out of the box as one piece.
+
+Unlike the lid it has no ledge, and cannot have one. The board rides in on the plate from below, so
+it has to pass whatever a ledge would leave, and the board sits 1.5 mm off the back wall with the
+jack tip 0.3 mm off the right. Any ledge wide enough to be a ledge fouls it. The four post ends are
+the seat instead, which is a cleaner stop anyway.
+
+One thing does cost size. The base posts can only be as tall as the space under the board, because
+the board and its overhangs fill the cavity in plan with nothing to spare. That is what sets
+`pcb_seat_h`, 8 mm rather than the 4 mm the card holder alone would need, and it is why the box is
+91.6 mm tall rather than 87. Anything hanging below the board has to miss the four corners; the card
+holder does.
+
+The rails are half the board's length so they stay clear of those corners, and the card-side one is
+interrupted again where the holder hangs down, which leaves it shorter still and off to one side.
+Between them and the two screws the board cannot rock, which is all they are for.
 
 ## Size, and how to shrink it
 
-`want_w` / `want_d` / `want_h` are a request, not a promise: the shell grows past them whenever the
-contents need the room. Two things push it past 80 x 40 x 35.
+There is no requested size. The shell is whatever the contents need and nothing else, so the only
+way to shrink it is to give it less to hold. Three things set it.
 
-- **Width.** The board plus its jack and header overhangs is 78.7 mm of stuff in a row.
+- **Width.** The board plus its jack and header overhangs is 79.7 mm of stuff in a row.
 - **Height.** A 57 mm speaker needs a panel at least 63 mm across in *both* directions. On the
   front face that sets the height, and the electronics bay below it adds the rest.
+- **Depth.** Not the board, the front panel. Every wall opening is placed off the board and the
+  board off the back wall, so the deeper the box the further the openings sit from the front. The
+  depth is whatever leaves the panel enough tray to hold the speaker bosses in front of the jack.
 
-| Change                                                     | Result           |
-| ---------------------------------------------------------- | ---------------- |
-| as shipped                                                 | 86.8 x 42.8 x 87 |
-| `-D 'pcb_over_right_f=0.015'`, headers trimmed flush       | 81.1 x 42.8 x 87 |
-| `-D 'speaker_d=40' -D 'speaker_depth=12'`                  | 86.8 x 42.8 x 70 |
-| both of the above                                          | 81.1 x 42.8 x 70 |
-| `-D 'speaker_face="top"'`, speaker fires up out of the lid | 86.8 x 88.3 x 44 |
-| top-firing 40 mm speaker                                   | 86.8 x 71.3 x 36 |
+| Change                                                | Result             |
+| ----------------------------------------------------- | ------------------ |
+| as shipped                                            | 86.8 x 42.5 x 91.6 |
+| `-D 'pcb_over_right_f=0.015'`, headers trimmed flush  | 81.1 x 42.5 x 91.6 |
+| `-D 'speaker_d=40' -D 'speaker_depth=12'`             | 86.8 x 42.5 x 74.6 |
+| both of the above                                     | 81.1 x 42.5 x 74.6 |
+| `-D 'pcb_seat_h=5'`, shorter base posts               | 86.8 x 42.5 x 88.6 |
 
 ## Changing the music
 
@@ -121,16 +188,18 @@ micro-B tongue is only about 6 mm long. Without the relief a cable with a fat ov
 before it seats. Confirmed with a real cable on the printed part. Check whether that port also
 carries power: the header pins marked G and V are the documented 5 V input.
 
-**Through the card slot, box shut.** `sd_slot` is on by default: a 13 x 3.2 mm letterbox in the
-wall the holder faces, on the card plane. `pcb_flip = true` (the default) turns the board 180
-degrees so that wall is the **back**, keeping the slot off the show face and putting the jack and
-USB on the right wall instead of the left. Set `pcb_flip = false` to have it the other way round,
-card slot in the front face under the grille. The card ends up about 4.5 mm inside the opening, so
-expect to use a fingernail or tweezers rather than fingertips. `sd_gap` sets that distance: smaller
-brings the card closer to the outside but crowds the USB relief against the wall corner.
+**Through the card slot, box shut.** A 13 x 3.2 mm letterbox in the
+wall the holder faces. The board sits turned 180 degrees so that wall is the **back**, which keeps
+the slot off the show face and puts the jack and USB out the right wall. The card ends up about
+4.5 mm inside the opening, so
+the mouth is funnelled: `sd_flare` opens it out 3 mm all round at the surface and tapers back to
+13 x 3.2 over `sd_flare_depth`. That guides a microSD in without hunting for the slot and gets a
+fingertip part of the way to the card, though the last of it still wants a fingernail. `sd_gap` sets
+that distance: smaller brings the card closer to the outside but crowds the USB relief against the
+wall corner.
 
-**By lifting the board out.** Lid off, two M2 screws out, board up, holder underneath. Always
-works, needs no slot.
+**By taking the base off.** Four screws out of the bottom and the base plate comes away with the
+board still bolted to it, holder underneath. Always works, needs no slot.
 
 One knock-on: the holder overhangs the seat rail on the card side, so that rail is interrupted over
 `sd_span` and the board is carried by the rest of it. The two screw posts land at 5.7 mm and
@@ -138,21 +207,26 @@ One knock-on: the holder overhangs the seat rail on the card side, so that rail 
 
 ## Assembly
 
-1. Drop the speaker into the collar on the inside of the front wall, magnet inwards.
+1. Lay the panel face down on the bench and drop the speaker into the collar, magnet upwards.
 2. Lay the retaining ring over the rim and drive 4 M3 x 6 into the bosses. The ring clamps the rim
    against the wall, and `speaker_flange_t` is the measured 2.5 mm rim, so the ring lands flush on
    the boss tops and presses the rim home. **Use 6 mm, not 8 mm.** The screw head bears 5.5 mm above
    the wall's inner face and the wall is 2.4 mm thick, so 6 mm engages 3.0 mm of plastic and leaves
    1.9 mm of wall, while 8 mm reaches 0.1 mm past the outside and dimples the front face.
-3. Drop the board between the two edge rails, jack and USB end towards their wall openings, and
-   fix it with 2 M2 screws into the posts. The board holes scale to about 3.7 mm in the photo, so
-   an M2 head will pull straight through: use a washer, or step up to M3 and set
-   `pcb_screw_d = 2.6`.
+3. Sit the board on the base plate's two rails, jack and USB end towards the right,
+   and fix it with 2 M2 screws into the posts. The board holes scale to about 3.7 mm in the photo,
+   so an M2 head will pull straight through: use a washer, or step up to M3 and set
+   `pcb_screw_d = 2.6`. Everything from here on is wired with the board on the loose plate.
 4. Wire the three pushbuttons across the three tact switches you need, see below. Mount the buttons
    in the lid and fit their nuts. The lid is thinned to `button_panel_t` (2 mm) around each hole so
    the nuts still reach the thread.
-5. Speaker leads go to the S-OUT pair on the header end.
-6. Drop the lid onto its ledge and fix with 4 screws.
+5. Speaker leads go to the S-OUT pair on the header end. Leave slack: the panel and the base plate
+   have to come apart again to get the box shut.
+6. Offer the panel up to the shell and hold it there. It is loose until the screws go in.
+7. Bring the base plate up under both, board first into the cavity, and drive 4 M3 x 10 into the
+   base posts. The front two land in the panel and pull it home.
+8. Drop the lid onto its ledge and drive 4 more. The front two land in the panel again, so between
+   them the lid and the base are what hold the box shut.
 
 ## Wiring the buttons
 
@@ -272,22 +346,38 @@ here because they are what you change if you build this with a different board o
   product photo and the heights were estimated, since a top-down photo cannot show how high the jack
   axis or the USB shell sit, but both were confirmed on the printed part. The last field is the
   outer relief depth, which is what lets a chunky USB cable seat.
-- `pcb_mount` - `both` (default) is rails plus screw posts, and the rails alone hold the board if
-  the posts turn out to be wrong.
-- `pcb_flip` - which wall the card slot and the connectors land on. See above.
+- `pcb_seat_h` - board underside above the base plate, and so the height of the base screw posts.
+  Below about 5 mm the base screws have nothing to bite and the render says so.
+- `pcb_rail_len_f` - rail length as a fraction of the board, 0.5. Long enough to stop the board
+  rocking, short enough to miss the base posts in the corners.
 - `speaker_flange_t` - rim thickness, measured at 2.5 mm. Too small and the ring will not clamp,
   too large and it crushes the cone.
 - `button_hole_d` - 7.2 mm, from Jaycar's 7 mm cutout for this pushbutton family plus fit. Check
   yours with calipers, the SP07xx bushings vary.
-- `grille_style` - `hex`, `dots`, `rings` or `slots`.
-- `button_labels` - engraved 0.6 mm into the lid. Set `label_depth = 0` to drop them.
-- `panel_cutouts` - extra openings in absolute box coordinates, for anything the connector list
-  does not cover.
-- `feet` - 4 recesses in the base for stick-on rubber feet.
+- `button_labels` - raised `label_h` off the lid and printed as their own part, `labels`.
+- `split_clear` - the gap the seam keeps in front of the nearest wall opening. `split_max_depth`
+  caps how deep the panel gets and `split_fit` is the clearance where the panel's posts enter the
+  shell.
+- `sd_flare` - how far the funnel around the card slot opens out, and `sd_flare_depth` how far back
+  it tapers. Set `sd_flare = 0` for a plain letterbox.
 
 ## Layout
 
-Front face carries the grille, upper middle, and nothing else. Electronics bay is the space
-underneath it: board flat on the floor, jack and micro USB out the right wall, pin headers in the
-clearance at the left, microSD slot in the back wall. Lid is the top face, drops onto an internal
-ledge and takes the three buttons in one row across the width.
+Front face carries the grille, upper middle, and nothing else. It is a separate part, 6.9 mm deep,
+seamed just in front of the connector openings. Electronics bay is the space behind it: board flat
+on the base plate, jack and micro USB out the right wall, pin headers in the clearance at the left,
+microSD slot in the back wall. Lid and base are matching inserts top and bottom, each screwing into
+four posts, and the front post of each set is on the panel, so both inserts help hold the panel on.
+The lid also takes the three buttons in one row across the width.
+
+## Views
+
+Regenerate all of these with `./export_png.sh`.
+
+| | |
+| --- | --- |
+| ![Front](images/front.png) front, grille and panel | ![Back](images/back.png) back, funnelled card slot |
+| ![Right](images/right.png) right, jack and micro USB | ![Left](images/left.png) left, plain |
+| ![Top](images/top.png) top, lid and buttons | ![Bottom](images/bottom.png) bottom, feet and the seam |
+
+![Exploded](images/exploded.png)

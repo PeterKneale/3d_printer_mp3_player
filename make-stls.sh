@@ -7,7 +7,6 @@ cd "$(dirname "$0")"
 
 SCAD=jukebox.scad
 OUT=stl
-LOGS=$OUT/logs
 
 OPENSCAD=${OPENSCAD:-$(command -v openscad || true)}
 if [[ -z $OPENSCAD ]]; then
@@ -20,19 +19,20 @@ if [[ -z ${OPENSCAD:-} ]]; then
   exit 1
 fi
 
-BODY=(body lid speaker_ring)
-PLATE=(print_plate)
+PARTS_ALL=(body panel lid labels base speaker_ring)
 
 usage() {
   cat <<EOF
 usage: $(basename "$0") [parts|plate] [openscad options]
 
-  parts    body, lid, speaker_ring       the three printed parts (default)
-  plate    print_plate                   all three on one bed, 177 x 112 mm
+  parts    the printed parts loose at the origin, to stl/ (default)
+  plate    the same parts already rotated and laid out on the bed, to stl/plate/. Load all of
+           them into the slicer at once: they arrive as separate objects in the right places
+           and orientations, so each can take its own filament
 
 Trailing options pass straight to openscad:
   $(basename "$0") parts -D 'pcb_w=77' -D 'pcb_d=33'
-  $(basename "$0") plate -D 'grille_style="rings"' -D 'pcb_flip=false'
+  $(basename "$0") plate -D 'grille_style="rings"' -D 'button_labels=["<<","||",">>"]'
 EOF
 }
 
@@ -46,10 +46,13 @@ case ${1:-} in
   ''|-*) ;;                     # no target given, or straight to openscad options
   *) echo "unknown target: $1" >&2; usage >&2; exit 1 ;;
 esac
-case $SEL in
-  plate) PARTS=("${PLATE[@]}") ;;
-  *)     PARTS=("${BODY[@]}") ;;
-esac
+PARTS=("${PARTS_ALL[@]}")
+EXTRA=(-D on_plate=false)
+if [[ $SEL == plate ]]; then
+  OUT=$OUT/plate
+  EXTRA=(-D on_plate=true)
+fi
+LOGS=$OUT/logs
 
 mkdir -p "$LOGS"
 failed=()
@@ -57,7 +60,7 @@ probe=$LOGS/params.log
 
 # Resolve the sizes once up front. This also catches a bad override before any real work, because
 # openscad only warns about an undefined variable and still exits 0 with a quietly wrong STL.
-"$OPENSCAD" -o "$LOGS/probe.stl" -D 'part="none"' "$@" "$SCAD" >"$probe" 2>&1
+"$OPENSCAD" -o "$LOGS/probe.stl" -D 'part="none"' "${EXTRA[@]}" "$@" "$SCAD" >"$probe" 2>&1
 rm -f "$LOGS/probe.stl"
 if grep -qE 'ERROR|WARNING' "$probe"; then
   echo "bad parameters:" >&2
@@ -75,7 +78,7 @@ for part in "${PARTS[@]}"; do
   log=$LOGS/$part.log
   start=$SECONDS
 
-  if ! "$OPENSCAD" -o "$stl" -D "part=\"$part\"" "$@" "$SCAD" >"$log" 2>&1; then
+  if ! "$OPENSCAD" -o "$stl" -D "part=\"$part\"" "${EXTRA[@]}" "$@" "$SCAD" >"$log" 2>&1; then
     status=FAILED
   elif grep -qE 'ERROR|WARNING' "$log"; then
     status=WARNED
@@ -107,4 +110,4 @@ if (( ${#failed[@]} )); then
 fi
 
 printf '\n%s\n' "${#PARTS[@]} parts written to $OUT/."
-printf '%s\n' "No supports, 0.2 mm layers, body open side up, rest flat."
+printf '%s\n' "No supports, 0.2 mm layers. Both shell halves print on their backs, rest flat."
