@@ -1,236 +1,167 @@
 # Personal jukebox enclosure
 
-Parametric OpenSCAD enclosure for a Jaycar-parts MP3 jukebox. Open `jukebox.scad` and use the
-OpenSCAD Customizer (Window > Customizer), or override any variable from the CLI with `-D`.
+A printed box for an MP3 module, a 57 mm speaker and three buttons. It has five printed parts.
 
-Current size: **86.8 x 42.5 x 91.6 mm**. Every render echoes the real size and the resolved PCB
-mount positions, so check the console after any change.
+> **AI wrote this project.** Claude made the OpenSCAD model, the scripts and this README. Measure
+> your parts. Compare them to the dimensions in this README before you print.
 
 ![Rotating preview](preview.gif)
 
-Rebuild the turntable with `./export_gif.sh`. `./export_png.sh` writes the still above and a set
-of straight-on views to [images/](images): front, back, left, right, top, bottom and an exploded
-three-quarter.
+| | |
+| --- | --- |
+| ![Front](images/front.png) **Front**: the grille | ![Back](images/back.png) **Back**: the microSD slot |
+| ![Right](images/right.png) **Right**: the jack and the micro USB port | ![Left](images/left.png) **Left**: no openings |
+| ![Top](images/top.png) **Top**: the lid and three buttons | ![Bottom](images/bottom.png) **Bottom**: the base plate and four screws |
+
+![Exploded](images/exploded.png)
+
+The box is **86.8 x 42.5 x 91.6 mm**. It stands upright. The speaker points forward.
 
 ## Contents
 
-- [Personal jukebox enclosure](#personal-jukebox-enclosure)
-  - [Contents](#contents)
-  - [Bill of materials](#bill-of-materials)
-  - [Building the STLs](#building-the-stls)
-  - [Board size](#board-size)
-  - [Parts to print](#parts-to-print)
-  - [The split shell](#the-split-shell)
-  - [The base insert](#the-base-insert)
-  - [Size, and how to shrink it](#size-and-how-to-shrink-it)
-  - [Changing the music](#changing-the-music)
-  - [Assembly](#assembly)
-  - [Wiring the buttons](#wiring-the-buttons)
-  - [Filling the card from YouTube](#filling-the-card-from-youtube)
-  - [Parameters](#parameters)
-  - [Layout](#layout)
-  - [Views](#views)
+- [Bill of materials](#bill-of-materials)
+- [Screws](#screws)
+- [Feet](#feet)
+- [Print the parts](#print-the-parts)
+- [How the box comes apart](#how-the-box-comes-apart)
+- [Assemble the box](#assemble-the-box)
+- [Wire the buttons](#wire-the-buttons)
+- [Change the music later](#change-the-music-later)
+- [Put music on the card](#put-music-on-the-card)
+- [Build the STL files](#build-the-stl-files)
+- [Use different parts](#use-different-parts)
+- [Make the renders again](#make-the-renders-again)
 
 ## Bill of materials
 
-| Part                                     | Jaycar code | Modelled as                              |
-| ---------------------------------------- | ----------- | ---------------------------------------- |
-| MP3 player module with button controls   | XC3748      | 69 x 32 mm bare board, see below         |
-| All purpose speaker, 57 mm, 8 ohm        | AS3000      | 57 mm dia, 20 mm deep, 2.5 mm rim        |
-| Red miniature pushbutton, SPST momentary | SP0710 x3   | 7 mm panel cutout                        |
-| M3 x 10 self-tapping screws              |             | 8 off, 4 lid and 4 base                  |
-| M3 x 6 self-tapping screws               |             | 4 off, speaker ring. Not 8 mm, see below |
-| M2 screw                                 |             | 2 off, PCB                               |
+| Part | Jaycar code | Qty | AUD |
+| --- | --- | --- | --- |
+| Arduino Compatible MP3 Audio Player | XC3748 | 1 | 17.50 |
+| 57 mm All Purpose Replacement Speaker | AS3000 | 1 | 4.95 |
+| Red Miniature Pushbutton, SPST momentary | SP0710 | 3 | 6.00 |
+| Rubber Feet, small, stick on, pack of 4 | HP0815 | 1 | 2.50 |
+| | | | **30.95** |
 
-## Building the STLs
+These prices are the Jaycar list prices in August 2026. The prices change.
 
-`make-stls.sh` renders into `stl/`, keeping each render's console output in `stl/logs/`. It resolves
-the parametric sizes first and prints them, refuses to build if an override is bad, and fails on any
-OpenSCAD warning or a non-manifold result, so a run that reports `ok` is a run you can slice.
+You also need a microSD card and 2 m of wire. Use wire of 28 AWG to 30 AWG. You also need
+approximately 101 g of filament.
+
+## Screws
+
+The model needs 14 screws. The head type is as important as the length. Jaycar does not sell the
+correct heads, so buy these screws from a fastener supplier.
+
+| Qty | Size | Head | Use |
+| --- | --- | --- | --- |
+| 8 | M3 x 10 | countersunk, 90 degrees | 4 in the lid, 4 in the base |
+| 4 | M3 x 6 | pan | the speaker ring |
+| 2 | M2 x 8 | pan | the board |
+
+The lid and the base have a conical recess at each screw. A countersunk head seats in this recess
+approximately 1 mm below the surface. A pan head cannot seat in a cone. A pan head stands
+approximately 1.6 mm above the surface. This is a problem at the base, because a rubber foot goes
+over each screw. A foot cannot stick to a surface that has a screw head above it.
+
+The speaker ring and the board both have a plain hole at each screw. The head must bear on a flat
+face, so use a pan head.
+
+All four sizes cut their own thread in the plastic. The holes in the model are the correct pilot
+diameters. Screws for plastic hold better than machine screws, but machine screws also work.
+
+## Feet
+
+The bottom of the base plate is flat. There are no recesses for the feet.
+
+Put one rubber foot over each of the four base screws. The foot is 12 x 12 mm and the screw head is
+5.8 mm, so the foot hides the screw. The screw head must be flush. Refer to the section above.
+
+The feet do two things. They stop the box when it slides. They also separate the box from the bench,
+so the bench does not amplify the vibration of the speaker.
+
+The feet do not stop the box when it falls over. The box is 91.6 mm tall and 42.5 mm deep. The
+speaker is the heaviest part and its centre is 54 mm above the bench. The box falls over at
+approximately 21 degrees from vertical. A pull on a headphone cable is enough. Put the box against a
+wall, or add mass inside the base.
+
+## Print the parts
 
 ```sh
-./make-stls.sh          # the five parts, one STL each, to stl/
-./make-stls.sh plate    # all five on one bed as a single STL, 177 x 191 mm, needs a 200 bed
-./make-stls.sh --help
+./make-stls.sh plate
 ```
 
-Trailing arguments pass straight to openscad, so variants build the same way:
+This command writes `stl/print_plate.stl`. The file contains all five parts. The script rotates each
+part and puts it in position on a bed of **177 x 191 x 36 mm**. Any bed of 200 mm is large enough.
 
-```sh
-./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh plate -D 'button_labels=["<<","||",">>"]'
-```
+- **No part needs support material.** Both halves of the shell lie on their backs. This is the
+  largest face of each half. It also puts the grille and the card slot flat on the bed.
+- **Use 0.2 mm layers and 3 perimeters.** The plate is then 178 layers and approximately 101 g.
+- **Use one colour.** No part needs a second colour.
 
-Set `OPENSCAD=/path/to/openscad` if it is not found automatically.
+You can also use 0.3 mm layers. No part on the plate needs 0.2 mm. The bed makes the finish of both
+visible faces, because both faces lie against the bed. The only small vertical detail is the
+lettering of 0.8 mm. At 0.3 mm the plate is 119 layers. First set `label_h = 0.9`. The letters are
+then exactly three layers.
 
-## Board size
+To get one STL file for each part, use `./make-stls.sh`.
 
-The bare board is **69 x 32 mm**, measured with calipers. The catalogue 77 x 33 x 8 mm is the
-envelope: the header pins overhang one end and the audio jack the other, and 8 mm is the height over
-the components on a 1.6 mm PCB. Keyestudio sell the same OEM module and publish the same three
-figures in a dimension diagram, which is where that convention shows.
+| Part | Function | Volume |
+| --- | --- | --- |
+| `body` | the back wall, the side walls and all the openings | 36.2 cm³ |
+| `panel` | the front face, the grille and the speaker mount | 23.3 cm³ |
+| `base` | the bottom plate. It holds the board | 9.9 cm³ |
+| `lid` | the top, the buttons and the labels | 8.5 cm³ |
+| `speaker_ring` | it clamps the rim of the speaker | 3.4 cm³ |
 
-Two product photos measured independently agreed with the calipers to 1.3%, both putting the 4-pin
-UART header at 94.0 px across three 2.54 mm pitches and the board rectangle at aspect 2.14 where
-77 x 33 would be 2.33. The remaining feature positions come from those photos, held as fractions of
-the board outline, so they rescale with `pcb_w` and `pcb_d`. Correct those two and the rails, screw
-posts, card slot and connector openings all follow.
+## How the box comes apart
 
-## Parts to print
+**The front is a separate part.** The four screws of the speaker ring point to the rear. In a closed
+box, no screwdriver can reach them. Put the loose panel face down on the bench. Then you can turn
+the screws from above.
 
-```sh
-./make-stls.sh parts
-```
+**The lid and the base are a matched pair.** Each one has four screws. Each screw goes into a post in
+a corner. Each corner has one post above and one post below. The front post of each pair is part of
+the panel. Therefore the lid screw pulls the panel down. The base screw pulls the panel in.
 
-Five parts: `body`, `panel`, `lid`, `base` and `speaker_ring`. Each has one job. The body is walls
-and openings, the panel is the show face and the speaker, the base carries the board, the lid
-carries the buttons and their labels.
+**The board is bolted to the base plate.** Remove the base and the board and its wires come out
+together. Two M2 screws and two short rails hold the board. The rails prevent movement of the board.
 
-No supports needed. Both shell halves print on their backs, which is their largest face and puts the
-grille and the card slot flat on the bed instead of up a wall. Everything else prints flat.
-0.2 mm layers, 3 perimeters.
+## Assemble the box
 
-`./make-stls.sh plate` writes the whole lot as one STL, `stl/print_plate.stl`, 177 x 191 x 36 mm,
-every part already rotated so none of them needs supports. That is the one to slice: load it, pick a
-filament, go. Nothing on the box needs a second colour.
+1. Put the panel face down on the bench. Put the speaker into the collar. The magnet must point up.
 
-`part="assembly"` is the preview and `part="none"` emits nothing so the file can be `include`d as a
-library. Any single part renders on its own with `openscad -o x.stl -D 'part="lid"' jukebox.scad`.
+2. Put the speaker ring on the rim of the speaker. Install four M3 x 6 screws. The ring clamps the
+   rim against the wall. **Do not use a longer screw. A longer screw comes through the front face.**
 
-## The split shell
+3. Put the board on the two rails of the base plate. The jack must point to the right. Install two
+   M2 screws. The holes in the board are approximately 3.7 mm, so an M2 head can pull through the
+   board. Use a washer, or change `pcb_screw_d` to 2.6 and use an M3 screw. Do all of the wire work
+   with the board on the loose plate.
 
-The front comes off as its own part. Without it the speaker ring is unbuildable: its 4 screws face
-backwards down the length of a shut box and no screwdriver reaches them past the opposite wall. With
-the panel loose you lay it face down on the bench, drop the speaker in and drive the screws straight
-down.
+4. Wire the three buttons. Refer to the next section. Install the buttons in the lid. Install the
+   nuts on the outside face. The lid is 2 mm thick at each hole, so the thread is long enough.
 
-The seam is a plane across the box, placed automatically at `split_clear` in front of the frontmost
-wall opening so no connector cutout is ever cut in half. On the shipped numbers that puts it 6.9 mm
-back from the front face, which the render echoes on every build:
+5. Solder the speaker wires to the S-OUT pair. This pair is at the header end of the board. Make
+   these wires 150 mm to 200 mm long. You must separate the panel and the base plate again.
 
-```
-split seam at y -14.35, front panel 6.9 mm deep
-```
+6. Hold the panel against the shell. It is loose until you install the screws.
 
-Only the walls and the lid ledge are cut. Everything standing inside keeps one part whole and
-reaches past the seam into open space: the speaker mount and the front post of each pair go with the
-panel. That is what holds the box together. Each corner has a lid post above and a base post below,
-the front pair of both sets belongs to the panel, so the lid screw pulls the panel down from above
-and the base screw pulls it in from below. Nothing else is needed, and there are no fasteners on the
-show face.
+7. Move the base plate up under the panel and the shell. Put the board into the cavity first.
+   Install four M3 x 10 screws. The two front screws go into the panel and pull it into position.
+   **Do not use a longer screw. A longer screw touches the board.**
 
-## The base insert
+8. Put the lid on the ledge. Install four more M3 x 10 screws. The two front screws go into the panel
+   again. The lid and the base hold the box closed.
 
-The bottom is a plate with the same footprint and the same job as the lid: four M3 up into the base
-posts. The board lives on it, on two short rails and its two M2 screws, so the board and its wiring
-come out of the box as one piece.
+## Wire the buttons
 
-Unlike the lid it has no ledge, and cannot have one. The board rides in on the plate from below, so
-it has to pass whatever a ledge would leave, and the board sits 1.5 mm off the back wall with the
-jack tip 0.3 mm off the right. Any ledge wide enough to be a ledge fouls it. The four post ends are
-the seat instead, which is a cleaner stop anyway.
+The board has six tact switches in a grid of 2 x 3. Use the three switches in the right column.
+**PRE-** is at the top. **NEXT/+** is in the middle. **PLAY/PAUSE** is at the bottom. Connect each
+panel button in parallel with the legs of its switch. Do not remove the switches from the board.
+Both switches then operate.
 
-One thing does cost size. The base posts can only be as tall as the space under the board, because
-the board and its overhangs fill the cavity in plan with nothing to spare. That is what sets
-`pcb_seat_h`, 8 mm rather than the 4 mm the card holder alone would need, and it is why the box is
-91.6 mm tall rather than 87. Anything hanging below the board has to miss the four corners; the card
-holder does.
-
-The rails are half the board's length so they stay clear of those corners, and the card-side one is
-interrupted again where the holder hangs down, which leaves it shorter still and off to one side.
-Between them and the two screws the board cannot rock, which is all they are for.
-
-## Size, and how to shrink it
-
-There is no requested size. The shell is whatever the contents need and nothing else, so the only
-way to shrink it is to give it less to hold. Three things set it.
-
-- **Width.** The board plus its jack and header overhangs is 79.7 mm of stuff in a row.
-- **Height.** A 57 mm speaker needs a panel at least 63 mm across in *both* directions. On the
-  front face that sets the height, and the electronics bay below it adds the rest.
-- **Depth.** Not the board, the front panel. Every wall opening is placed off the board and the
-  board off the back wall, so the deeper the box the further the openings sit from the front. The
-  depth is whatever leaves the panel enough tray to hold the speaker bosses in front of the jack.
-
-| Change                                                | Result             |
-| ----------------------------------------------------- | ------------------ |
-| as shipped                                            | 86.8 x 42.5 x 91.6 |
-| `-D 'pcb_over_right_f=0.015'`, headers trimmed flush  | 81.1 x 42.5 x 91.6 |
-| `-D 'speaker_d=40' -D 'speaker_depth=12'`             | 86.8 x 42.5 x 74.6 |
-| both of the above                                     | 81.1 x 42.5 x 74.6 |
-| `-D 'pcb_seat_h=5'`, shorter base posts               | 86.8 x 42.5 x 88.6 |
-
-## Changing the music
-
-The microSD holder is on the **underside** of the board, and the enclosure is built around what
-that implies. Measured off the Keyestudio underside photo at the same 12.336 px/mm: the holder is
-17.1 x 15.9 mm, sits 15.2 to 32.3 mm from the jack end, and its contact leads are along the edge
-away from the card mouth, so the card slides in and out along the board's short axis. The mouth is
-only **0.6 mm inside one long edge**, which means the card can come straight out through a wall
-without the board moving.
-
-So there are three ways to change music, and you will mostly use the first.
-
-**Over micro USB, box shut.** The module presents the card to a computer over its micro USB port.
-Plug in, drag files, unplug. The opening is stepped, 13 x 9 mm through the wall with a 16 x 12 mm
-relief 1.4 mm deep outside, because the receptacle sits about 5.5 mm behind the outer face while a
-micro-B tongue is only about 6 mm long. Without the relief a cable with a fat overmould bottoms out
-before it seats. Confirmed with a real cable on the printed part. Check whether that port also
-carries power: the header pins marked G and V are the documented 5 V input.
-
-**Through the card slot, box shut.** A 13 x 3.2 mm letterbox in the
-wall the holder faces. The board sits turned 180 degrees so that wall is the **back**, which keeps
-the slot off the show face and puts the jack and USB out the right wall. The card ends up about
-4.5 mm inside the opening, so
-the mouth is funnelled: `sd_flare` opens it out 3 mm all round at the surface and tapers back to
-13 x 3.2 over `sd_flare_depth`. That guides a microSD in without hunting for the slot and gets a
-fingertip part of the way to the card, though the last of it still wants a fingernail. `sd_gap` sets
-that distance: smaller brings the card closer to the outside but crowds the USB relief against the
-wall corner.
-
-**By taking the base off.** Four screws out of the bottom and the base plate comes away with the
-board still bolted to it, holder underneath. Always works, needs no slot.
-
-One knock-on: the holder overhangs the seat rail on the card side, so that rail is interrupted over
-`sd_span` and the board is carried by the rest of it. The two screw posts land at 5.7 mm and
-65.1 mm from the jack end, clear of the 15.2 to 32.3 mm the holder occupies.
-
-## Assembly
-
-1. Lay the panel face down on the bench and drop the speaker into the collar, magnet upwards.
-2. Lay the retaining ring over the rim and drive 4 M3 x 6 into the bosses. The ring clamps the rim
-   against the wall, and `speaker_flange_t` is the measured 2.5 mm rim, so the ring lands flush on
-   the boss tops and presses the rim home. **Use 6 mm, not 8 mm.** The screw head bears 5.5 mm above
-   the wall's inner face and the wall is 2.4 mm thick, so 6 mm engages 3.0 mm of plastic and leaves
-   1.9 mm of wall, while 8 mm reaches 0.1 mm past the outside and dimples the front face.
-3. Sit the board on the base plate's two rails, jack and USB end towards the right,
-   and fix it with 2 M2 screws into the posts. The board holes scale to about 3.7 mm in the photo,
-   so an M2 head will pull straight through: use a washer, or step up to M3 and set
-   `pcb_screw_d = 2.6`. Everything from here on is wired with the board on the loose plate.
-4. Wire the three pushbuttons across the three tact switches you need, see below. Mount the buttons
-   in the lid and fit their nuts. The lid is thinned to `button_panel_t` (2 mm) around each hole so
-   the nuts still reach the thread. The nuts land on the outside face, so `button_nut_d` is what
-   keeps the lettering out of their way.
-5. Speaker leads go to the S-OUT pair on the header end. Leave slack: the panel and the base plate
-   have to come apart again to get the box shut.
-6. Offer the panel up to the shell and hold it there. It is loose until the screws go in.
-7. Bring the base plate up under both, board first into the cavity, and drive 4 M3 x 10 into the
-   base posts. The front two land in the panel and pull it home.
-8. Drop the lid onto its ledge and drive 4 more. The front two land in the panel again, so between
-   them the lid and the base are what hold the box shut.
-
-## Wiring the buttons
-
-The three switches you need are the whole right-hand column of the 2 x 3 grid: PRE- at the top,
-NEXT/+ in the middle, PLAY/PAUSE at the bottom. Wire each panel button in parallel across the legs
-of its onboard switch. Leave the onboard switches in place, nothing here is destructive and both
-will work.
-
-**Take one wire from each side of the switch, not two from the same side.** These are standard 6 mm
-tact switches: 4 legs, measured at 7.2 mm apart across the body and 4.6 mm along it, and on this
-board they stick out towards the jack end and the header end. Four legs but only two terminals,
-because each terminal has two legs for mechanical stability, so two of the four are already shorted
-inside the switch.
+Each switch has four legs but only two terminals. Two legs connect to each terminal. Therefore two
+of the four legs are already connected together in the switch.
 
 ```
    jack end            header end
@@ -239,141 +170,172 @@ inside the switch.
         2 o----------o 4        wire 1+4, or 2+3
 ```
 
-Pick the two **diagonally opposite** legs and you cannot get it wrong: diagonal legs fall in
-different terminals under either possible internal pairing, so you do not need to know which
-convention your switches follow. Two legs from the same side is a permanent short, and the module
-will read that button as held down from the moment it powers up.
+**Connect one wire to each side of the switch. Do not connect two wires to the same side.** Use the
+two legs that are diagonally opposite. These two legs are always in different terminals. Two wires on
+the same side make a permanent short circuit. The module then reads that button as pressed.
 
-With a multimeter it is a ten second check: the two legs on one side should beep with the button
-untouched, and across the body should be open until pressed.
+Use a multimeter to check the switch. The two legs on one side show continuity. The two legs across
+the body show an open circuit until you press the switch.
 
-**Check for a common ground first.** The YX5200 pulls its button inputs up and switches them to
-ground, so one side of every button is very likely a shared rail. Probe continuity between a leg of
-PLAY/PAUSE and a leg of NEXT/+. If they beep, you need 4 wires rather than 6: one common return
-plus three signals.
+**Check for a common ground first.** The YX5200 connects each button input to ground. One side of
+every button is probably a common rail. Check the continuity between a leg of PLAY/PAUSE and a leg of
+NEXT/+. If they show continuity, you need four wires and not six. Use one common return and three
+signal wires.
 
-Practicalities, because the pads are 0.6 to 0.9 mm fillets:
+The pads are small. They are 0.6 mm to 0.9 mm.
 
-- 28 to 30 AWG stranded or enamelled wire. Thicker wire levers the leg off the pad.
-- Tin the leg, tin the wire, tack them together, do not dwell.
-- Hot glue over each joint once tested. These wires get tugged every time the lid comes off, and a
-  lifted pad on this board is not really repairable.
-- Make the wires **150 to 200 mm**, not the 90 mm the box needs. The buttons live in the lid and the
-  board is screwed to the floor, so you want enough slack to lift the lid clear and set it beside
-  the box while you work.
-- The SP0710 has two solder tags and no polarity, so either wire to either tag.
+- Use wire of 28 AWG to 30 AWG. Thicker wire can break the leg off the pad.
+- Tin the leg. Tin the wire. Then solder them together. Do not apply heat for a long time.
+- Put hot glue on each joint after you test it. You pull these wires each time you remove the lid.
+  You cannot repair a pad that comes off this board.
+- The button has two solder tags and no polarity. Connect either wire to either tag.
 
-## Filling the card from YouTube
+## Change the music later
 
-`yt-dlp` pulls the audio down and `rsync` is what puts it on the card without Apple metadata riding
-along. Keep a staging folder on the Mac, treat the card as a copy of it, and the card never
-accumulates anything you did not put there.
+There are three methods. You will use the first method most.
+
+**Use the micro USB port. The box stays closed.** The module gives a computer access to the card
+through this port. Connect the cable. Copy the files. Disconnect the cable. The opening has a step.
+It is larger and shallower on the outside face, so a cable with a large moulding also seats. Check if
+this port also supplies power to your module. The header pins marked G and V are the 5 V input.
+
+**Use the card slot. The box stays closed.** The slot is in the back wall. It is 13 x 3.2 mm. The
+mouth has a taper of 3 mm on all four sides, so a microSD card enters the slot easily. The card stops
+4.5 mm inside the opening. Use a fingernail for the last part.
+
+**Remove the base.** Lift off the four rubber feet. Remove four screws from the bottom. The plate,
+the board and the card holder come out together. This method always works.
+
+## Put music on the card
+
+`yt-dlp` downloads the audio. `rsync` copies the files to the card. `rsync` does not copy the Apple
+metadata. Keep a folder on the Mac. Make the card a copy of this folder. The card then holds only the
+files that you put in the folder.
 
 ```sh
 brew install yt-dlp ffmpeg
 ```
 
-`get-music.sh` wraps the download. The public domain Famous Speeches list is a fair example,
-84 tracks:
+`get-music.sh` controls the download. This public domain playlist is an example. It has 84 tracks.
 
 ```sh
-./get-music.sh -n 'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'
-./get-music.sh    'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'
+./get-music.sh -n 'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'   # list only
+./get-music.sh    'https://www.youtube.com/watch?v=Y0t-RqjMH-A&list=PL4A1446D924B9C895'   # download
 ```
 
-`-n` lists the tracks without downloading. `-i 6` or `-i 1-10` takes only those positions, `-1`
-takes just the linked video rather than its playlist, `-o DIR` changes the destination from
-`~/Music/mp3card` and `-m` writes title and artist tags, which YouTube sources otherwise arrive
-without. `./get-music.sh -h` has the rest.
+Use `-i 6` or `-i 1-10` to select playlist positions. Use `-1` to get only the linked video. Use
+`-o DIR` to change the destination from `~/Music/mp3card`. Use `-m` to write the title and artist ID3
+tags, because YouTube files do not have them. Use `./get-music.sh -h` for the other options.
 
-Underneath it is one yt-dlp call:
-
-```sh
-yt-dlp -x --audio-format mp3 --restrict-filenames \
-  -o "$HOME/Music/mp3card/%(playlist_index&{:02d}-|)s%(title)s.%(ext)s" URL
-```
-
-A `watch?v=...&list=...` URL takes the whole playlist, because yt-dlp follows the `list` parameter
-whether or not `&index=` is on the end. The conditional `playlist_index` numbers playlist tracks
-and leaves a lone video unnumbered, where a plain `%(playlist_index)02d` would name it `NA-`.
-`--restrict-filenames` flattens the fullwidth quotes and colons YouTube titles carry, which a
-FAT32 card and an ASCII-only player are both happier without.
-
-ID3 tags are left alone. yt-dlp writes nothing of its own beyond an encoder string, so whatever
-titles and artists the source carries survive onto the card. Pass `--embed-metadata` if you want it
-to fill in tags the source left empty.
-
-**The metadata to get rid of is Apple's.** FAT32 cannot store extended attributes, so a file
-carrying one lands on the card with a second `._name` file beside it, and a player that indexes
-every file it finds will list those as extra silent tracks. Strip them from the staging folder,
-then copy with `rsync`, which does not carry attributes across unless you ask for `-E`:
+**You must remove the Apple metadata.** A FAT32 card cannot hold extended attributes. The card
+therefore gets a second file with the name `._name` beside each file that has an attribute. A player
+reads every file, so it shows these files as silent tracks.
 
 ```sh
-xattr -cr ~/Music/mp3card              # drop quarantine and the rest
+xattr -cr ~/Music/mp3card              # remove the attributes
 rsync -rt --delete --exclude='.DS_Store' --exclude='._*' --exclude='*.part' \
-  ~/Music/mp3card/ /Volumes/MP3S/      # copy, attributes left behind
-dot_clean -m /Volumes/MP3S             # sweep any sidecar that still appeared
+  ~/Music/mp3card/ /Volumes/MP3S/      # copy the files
+dot_clean -m /Volumes/MP3S             # remove any file that remains
 diskutil eject /Volumes/MP3S
 ```
 
-The three excludes are all things that turn up in the staging folder and have no business on the
-card. Opening the folder in Finder leaves a `.DS_Store`, and a download that gets interrupted
-leaves a `.part` behind, which `--delete` alone will happily mirror across.
+`--delete` makes the card an exact copy of the folder. If you remove a track from the folder, the
+next copy removes it from the card. The three excludes are files that occur in the folder. The card
+does not need them. `rsync` and `dot_clean` both report that they cannot read `.Trashes`. macOS makes
+this directory at each mount and protects it. This message is not a fault.
 
-`--delete` makes the card an exact copy of the folder, so dropping a track locally drops it from the
-card as well. Both `rsync` and `dot_clean` will say they cannot read `.Trashes`. That is a directory
-macOS recreates on every mount and guards, the message is harmless and `dot_clean` still exits 0.
+**Do not use `cp`.** It copies every attribute. `cp -X` also copies `com.apple.quarantine`. This
+attribute alone makes a second file on the card.
 
-Plain `cp` is the one to avoid. It copies every attribute, and even `cp -X` drags
-`com.apple.quarantine` across, which is enough on its own to produce a sidecar.
+## Build the STL files
 
-## Parameters
+You need this section only if you change the model. The `stl/` directory already has the files.
 
-Every dimension below has been confirmed against the real parts on a printed enclosure. They are
-here because they are what you change if you build this with a different board or speaker.
+```sh
+./make-stls.sh          # one STL file for each of the five parts
+./make-stls.sh plate    # all five parts on one bed, in one STL file
+./make-stls.sh --help
+```
 
-- `pcb_w`, `pcb_d` - 69 x 32, measured. Everything else scales off them.
-- `pcb_connectors` - the two openings in the jack-end wall. Positions along the wall came off the
-  product photo and the heights were estimated, since a top-down photo cannot show how high the jack
-  axis or the USB shell sit, but both were confirmed on the printed part. The last field is the
-  outer relief depth, which is what lets a chunky USB cable seat.
-- `pcb_seat_h` - board underside above the base plate, and so the height of the base screw posts.
-  Below about 5 mm the base screws have nothing to bite and the render says so.
-- `pcb_rail_len_f` - rail length as a fraction of the board, 0.5. Long enough to stop the board
-  rocking, short enough to miss the base posts in the corners.
-- `speaker_flange_t` - rim thickness, measured at 2.5 mm. Too small and the ring will not clamp,
-  too large and it crushes the cone.
-- `button_hole_d` - 7.2 mm, from Jaycar's 7 mm cutout for this pushbutton family plus fit. Check
-  yours with calipers, the SP07xx bushings vary.
-- `button_labels` - moulded `label_h` proud of the lid rather than cut into it, and part of the lid
-  rather than a separate part.
-- `button_nut_d` - the nut sits on the **outside** face, unlike `button_body_d` which is clearance
-  underneath. It is what `label_offset` is derived from: the lettering is pushed `label_gap` clear
-  of the nut, not of the hole, because the nut is wider than the hole and a driver on it is wider
-  again. Get this wrong and the nuts sit on the writing.
-- `split_clear` - the gap the seam keeps in front of the nearest wall opening. `split_max_depth`
-  caps how deep the panel gets and `split_fit` is the clearance where the panel's posts enter the
-  shell.
-- `sd_flare` - how far the funnel around the card slot opens out, and `sd_flare_depth` how far back
-  it tapers. Set `sd_flare = 0` for a plain letterbox.
+The script first calculates the dimensions and prints them. It stops if an override is not valid. It
+also stops at an OpenSCAD warning, or if a part is not manifold. Therefore a part with the status
+`ok` is correct. The script writes the output of each render to `stl/logs/`.
 
-## Layout
+The script sends the arguments after the target to openscad:
 
-Front face carries the grille, upper middle, and nothing else. It is a separate part, 6.9 mm deep,
-seamed just in front of the connector openings. Electronics bay is the space behind it: board flat
-on the base plate, jack and micro USB out the right wall, pin headers in the clearance at the left,
-microSD slot in the back wall. Lid and base are matching inserts top and bottom, each screwing into
-four posts, and the front post of each set is on the panel, so both inserts help hold the panel on.
-The lid also takes the three buttons in one row across the width.
+```sh
+./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
+./make-stls.sh plate -D 'button_labels=["<<","||",">>"]'
+```
 
-## Views
+Set `OPENSCAD=/path/to/openscad` if the script cannot find openscad. You can also open
+`jukebox.scad` in the OpenSCAD application and use the Customizer. It is in the Window menu.
 
-Regenerate all of these with `./export_png.sh`.
+## Use different parts
 
-| | |
+The shell has no requested size. The size is the size that the contents need. To change the size,
+change the contents. Three items control the dimensions.
+
+- **Width.** The board, the jack and the header pins are 79.7 mm in a row.
+- **Height.** A speaker of 57 mm needs a panel of 63 mm in both directions. This sets the height of
+  the front face. The bay for the electronics adds the rest of the height.
+- **Depth.** The front panel controls the depth, and not the board. The panel must hold the speaker
+  bosses. It must also stay clear of the jack opening behind it.
+
+| Change | Result |
 | --- | --- |
-| ![Front](images/front.png) front, grille and panel | ![Back](images/back.png) back, funnelled card slot |
-| ![Right](images/right.png) right, jack and micro USB | ![Left](images/left.png) left, plain |
-| ![Top](images/top.png) top, lid and buttons | ![Bottom](images/bottom.png) bottom, feet and the seam |
+| no change | 86.8 x 42.5 x 91.6 |
+| `-D 'pcb_over_right_f=0.015'`, header pins cut flush | 81.1 x 42.5 x 91.6 |
+| `-D 'speaker_d=40' -D 'speaker_depth=12'` | 86.8 x 42.5 x 74.6 |
+| both of the changes above | 81.1 x 42.5 x 74.6 |
+| `-D 'pcb_seat_h=5'`, shorter posts in the base | 86.8 x 42.5 x 88.6 |
 
-![Exploded](images/exploded.png)
+**Start with the board.** The model uses a bare board of **69 x 32 mm**. The catalogue gives
+77 x 33 mm. This is the envelope. It includes the header pins at one end and the jack at the other
+end. The model holds each board feature as a fraction of the board outline. Therefore a correction to
+`pcb_w` and `pcb_d` also moves the rails, the posts, the card slot and the connector openings.
+
+These are the most useful parameters.
+
+- `pcb_w`, `pcb_d`. The board is 69 x 32 mm. All other dimensions scale from these two.
+- `pcb_connectors`. The two openings in the right wall. Each row gives the position along the wall,
+  the height above the board, the size, the corner radius and the depth of the outer relief.
+- `pcb_seat_h`. The height of the board above the base plate. This is also the maximum height of the
+  posts in the base. Below approximately 5 mm the screws are too short and the render gives a warning.
+- `pcb_rail_len_f`. The length of each rail as a fraction of the board. It is 0.5. The rails are long
+  enough to hold the board and short enough to clear the posts in the corners.
+- `speaker_flange_t`. The thickness of the rim, 2.5 mm. If the value is too small, the ring does not
+  clamp the rim. If the value is too large, the ring damages the cone.
+- `ring_t`. The thickness of the ring, 3 mm. The ring sits on the bosses, so this value sets the
+  height of the screw head above the wall. If you change it, change the screw length.
+- `button_hole_d`. The diameter of the hole, 7.2 mm. Measure your buttons. The bushing diameter is
+  not the same on all buttons of this family.
+- `button_nut_d`. The diameter of the nut. The nut sits on the **outside** face. `button_body_d` is
+  the clearance below the lid. The model puts the lettering clear of the nut and not clear of the
+  hole, because the nut is larger than the hole. A driver on the nut is larger again.
+- `split_clear`. The distance between the seam and the nearest opening in a wall. No opening is ever
+  cut in two. `split_fit` is the clearance where the posts of the panel enter the shell.
+- `sd_flare`. The width of the taper at the card slot. `sd_flare_depth` is its depth. Set
+  `sd_flare = 0` for a slot with no taper.
+
+Each render prints the calculated dimensions. Read the console after each change.
+
+```
+outer  86.8433 x 42.5 x 91.6 mm
+cavity 82.0433 x 37.7 x 85.6 mm
+pcb 69 x 32, jack out 3.9537, headers out 6.7896 mm
+pcb screw posts at [[-28.0485, -0.4896], [32.1264, 1.6096]] from board centre
+sd card sits 4.5 mm inside the back wall
+split seam at y -14.35, front panel 6.9 mm deep
+print plate 176.537 x 191.2 mm
+```
+
+## Make the renders again
+
+```sh
+./export_png.sh     # preview.png and the six straight views in images/
+./export_gif.sh     # the turntable, 36 frames. It needs ffmpeg
+```
+
+Both scripts make a full CGAL render. The OpenSCAD preview fills the holes of the grille with the
+part behind them. A straight view of the front is then not usable.

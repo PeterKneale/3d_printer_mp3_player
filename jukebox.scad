@@ -105,10 +105,6 @@ split_clear = 1.5;        // seam this far in front of the frontmost wall openin
 split_max_depth = 10;     // cap on how deep the front panel gets
 split_fit = 0.25;
 
-/* [Feet] */
-foot_d = 12;
-foot_recess = 1.0;
-
 /* [Quality] */
 $fa = 3;
 $fs = 0.4;
@@ -169,8 +165,6 @@ plate_gap = 8;
 ring_w = speaker_d + 4;
 plate_w = out_w + plate_gap + max(lid_w, ring_w);
 plate_h = max(2 * out_h + plate_gap, 2 * (lid_d + plate_gap) + ring_w);
-foot_x = px - foot_d / 2 - 3;  // clear of the base screw heads, which own the corners
-foot_y = lid_d / 2 - foot_d / 2 - 1;
 
 btn_y = button_row_y;
 
@@ -369,11 +363,6 @@ module connector_cuts() {
     }
 }
 
-module foot_recesses() {
-    for (sx = [-1, 1], sy = [-1, 1])
-        translate([sx * foot_x, sy * foot_y, -1]) cylinder(d = foot_d, h = foot_recess + 1);
-}
-
 /* ---------------- parts ---------------- */
 module before(y1) { translate([-out_w, y1 - 2 * out_d, -1]) cube([2 * out_w, 2 * out_d, out_h + 2]); }
 module behind(y1) { translate([-out_w, y1, -1]) cube([2 * out_w, 2 * out_d, out_h + 2]); }
@@ -441,7 +430,6 @@ module base() {
             translate([0, 0, -eps])
                 cylinder(d1 = lid_head_d, d2 = lid_screw_d + 1.0, h = lid_head_h + eps);
         }
-        foot_recesses();
     }
 }
 
