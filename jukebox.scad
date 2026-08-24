@@ -3,12 +3,12 @@
 // The shell is sized by its contents: there is nothing to ask for, only components to describe.
 
 /* [Output] */
-part = "assembly";        // [assembly, body, panel, lid, base, speaker_ring, print_plate, none]
+part = "assembly";        // [assembly, body, panel, lid, speaker_ring, print_plate, none]
 explode = 30;             // lid lift in the assembly view
 
 /* [Shell] */
 wall = 2.4;
-floor_t = 3.0;            // base insert, same job and thickness as the lid
+floor_t = 3.0;            // integral floor, the closed end of the shell
 lid_t = 3.0;
 corner_r = 5;
 ledge_w = 2.0;            // shelf width the lid drops onto
@@ -98,12 +98,19 @@ sd_flare_depth = 2.0;
 
 /* [Split] */
 // The shell is two parts. The front comes off so the speaker can be fitted to a loose panel rather
-// than down the length of a shut box, and so both halves print on their backs. Only the walls and
-// the two ledges are cut at the seam: the speaker mount and the front post of each pair stay whole
-// and reach past it into open space, which is what lets the lid and base screws clamp the panel on.
+// than down the length of a shut box. The floor stays with the back: closing one end of the shell is
+// what stops the box flexing, and it costs no visible colour because nobody looks at the underside.
+// Only the walls and the two ledges are cut at the seam: the speaker mount and the front post of
+// each pair stay whole and reach past it into open space, which is what lets the lid screw clamp the
+// panel down and the floor screw pull its bottom in.
 split_clear = 1.5;        // seam this far in front of the frontmost wall opening
 split_max_depth = 10;     // cap on how deep the front panel gets
 split_fit = 0.25;
+// Half lap down each side seam, so the halves guide each other together instead of butting.
+lip_share = 0.5;          // the tongue's share of the wall, the panel's outer strap takes the rest
+lip_len = 3.0;            // how far the tongue reaches into the panel, clamped by the panel depth
+lip_lead = 0.6;           // thinner over its last lip_lead, so the tip finds the groove
+lip_land = 1.5;           // panel side wall left whole between the groove and the front wall
 
 /* [Quality] */
 $fa = 3;
@@ -160,11 +167,14 @@ corner_cx = cav_w / 2 - corner_ri;
 corner_cy = cav_d / 2 - corner_ri;
 // A post drawn about the corner's own arc centre, big enough to still carry the screw at px, py.
 post_r = norm([px - corner_cx, py - corner_cy]) + post_d / 2;
+// Cone height under a back lid post. It is struck from the point on the corner fillet rather than the
+// post's own axis, so it has to reach the far side of the post: post_r past the arc centre.
+post_taper = post_r + corner_ri + 0.5;
 base_post_h = pcb_seat_h;      // the board underside is as high as a base post may reach
 plate_gap = 8;
 ring_w = speaker_d + 4;
 plate_w = out_w + plate_gap + max(lid_w, ring_w);
-plate_h = max(2 * out_h + plate_gap, 2 * (lid_d + plate_gap) + ring_w);
+plate_h = max(out_d + plate_gap + out_h, lid_d + plate_gap + ring_w);
 
 btn_y = button_row_y;
 
@@ -179,6 +189,9 @@ conn_edges = [for (c = pcb_connectors)
               - (c[2] + (c[5] > 0 ? plug_relief_grow : 0)) / 2 - split_clear];
 seam_y = min(concat(conn_edges, [-cav_d / 2 + split_max_depth]));
 face_d = seam_y + cav_d / 2 + wall;       // front panel depth, outer face to seam
+lip_t = (wall - split_fit) * lip_share;     // tongue thickness
+lip_strap = wall - split_fit - lip_t;       // panel wall left outboard of the groove
+lip_reach = min(lip_len, face_d - wall - lip_land - split_fit);
 
 echo(str("outer  ", out_w, " x ", out_d, " x ", out_h, " mm"));
 echo(str("cavity ", cav_w, " x ", cav_d, " x ", cav_h, " mm"));
@@ -187,9 +200,12 @@ echo(str("pcb ", pcb_w, " x ", pcb_d, ", jack out ", pcb_over_left,
 echo(str("pcb screw posts at ", pcb_hole_pts, " from board centre"));
 echo(str("sd card sits ", sd_reach, " mm inside the back wall"));
 echo(str("split seam at y ", seam_y, ", front panel ", face_d, " mm deep"));
+echo(str("seam half lap: tongue ", lip_t, " x ", lip_reach, ", panel strap ", lip_strap, " mm"));
 echo(str("print plate ", plate_w, " x ", plate_h, " mm"));
 if (face_d - wall < speaker_flange_t + 1)
     echo("WARNING: front panel too shallow for the speaker bosses");
+if (lip_reach < lip_lead + 1) echo("WARNING: front panel too shallow for the seam lip");
+if (min(lip_t, lip_strap) < 0.9) echo("WARNING: seam half lap leaves a wall under 0.9 mm");
 if (base_post_h < 5) echo("WARNING: pcb_seat_h too low for the base screws to bite");
 
 /* ---------------- helpers ---------------- */
@@ -259,7 +275,7 @@ module pcb_rails() {
     rl = pcb_rail_len_f * pcb_w;
     sx0 = (sd_span[0] - 0.5) * pcb_w - 1;
     sx1 = (sd_span[1] - 0.5) * pcb_w + 1;
-    for (sy = [-1, 1]) linear_extrude(pcb_seat_h) difference() {
+    for (sy = [-1, 1]) translate([0, 0, -eps]) linear_extrude(pcb_seat_h + eps) difference() {
         translate([0, sy * (bd / 2 - pcb_rail_w / 2)]) square([rl, pcb_rail_w], center = true);
         if (sy == -1) translate([(sx0 + sx1) / 2, -bd / 2])
             square([sx1 - sx0, bd], center = true);
@@ -267,21 +283,19 @@ module pcb_rails() {
 }
 
 module pcb_posts() {
-    for (p = pcb_hole_pts) translate([p[0], p[1]]) difference() {
-        cylinder(d = pcb_post_d, h = pcb_seat_h);
-        translate([0, 0, -1.5]) cylinder(d = pcb_screw_d, h = pcb_seat_h + 1.5);
+    for (p = pcb_hole_pts) translate([p[0], p[1], -eps]) difference() {
+        cylinder(d = pcb_post_d, h = pcb_seat_h + eps);
+        translate([0, 0, -1.5]) cylinder(d = pcb_screw_d, h = pcb_seat_h + 1.5 + 2 * eps);
     }
 }
 
-// Rails carry the board's long edges, the two posts take its screws. Both live on the base plate.
+// Rails carry the board's long edges, the two posts take its screws. Both stand on the floor.
 module pcb_mount_geo() {
     translate([pcb_x, pcb_y, floor_t]) rotate([0, 0, 180]) { pcb_rails(); pcb_posts(); }
 }
 
 /* ---------------- shell details ---------------- */
-// Only the lid gets a ledge. The base plate cannot have one: the board rides in on it from below
-// and has to pass whatever the ledge leaves, and the board is 1.5 mm off the back wall with the
-// jack tip 0.3 mm off the right. The four base posts are its seat instead.
+// Only the lid gets a ledge. The other end of the shell is the floor, which needs none.
 module lid_ledge() {
     translate([0, 0, lid_z - ledge_h]) difference() {
         rbox(cav_w, cav_d, ledge_h, corner_ri);
@@ -322,10 +336,26 @@ module lid_post_holes(side = 0) {
             cylinder(d = lid_screw_d, h = post_h + 2);
 }
 
+// Grown sideways and upwards only. The free end of a base post is its top, and below it is the
+// floor, which the clearance must not eat into.
 module base_posts(side = 0, g = 0) {
     for (sx = [-1, 1], sy = [-1, 1]) if (side == 0 || sy == side)
-        translate([0, 0, floor_t - g])
+        translate([0, 0, floor_t])
             linear_extrude(base_post_h + g) post_profile(sx, sy, g);
+}
+
+// A back lid post hangs in mid air, and the body prints standing on its floor, so each gets a 45
+// degree cone beneath it. Struck from the point on the corner fillet, not the post's own axis: that
+// is what keeps every layer of the cone attached to the wall instead of starting in free space.
+module lid_post_cone(side = 0) {
+    c = corner_ri / sqrt(2);
+    z0 = lid_z - post_h - post_taper;
+    for (sx = [-1, 1], sy = [-1, 1]) if (side == 0 || sy == side)
+        intersection() {
+            translate([0, 0, z0]) linear_extrude(post_taper) post_profile(sx, sy);
+            translate([sx * (corner_cx + c), sy * (corner_cy + c), z0])
+                cylinder(r1 = 0, r2 = post_taper, h = post_taper);
+        }
 }
 
 module base_post_holes(side = 0) {
@@ -386,23 +416,90 @@ module speaker_mount() {
     intersection() { place_spk_front() spk_solids(); cavity_clip(); }
 }
 
-// Back shell: everything behind the seam, relieved where the panel's posts reach into it.
+// The wall from the cavity face outwards by t, following the corner fillet.
+module wall_band(t) {
+    difference() {
+        rrect(cav_w + 2 * t, cav_d + 2 * t, corner_ri + t);
+        rrect(cav_w, cav_d, corner_ri);
+    }
+}
+
+// The tongue the body carries past the seam, and grown by g the groove the panel is relieved by.
+// Two lengths, the longer one thinner, is what puts the guiding step on the tip.
+module seam_lip(g = 0) {
+    for (s = [[lip_reach - lip_lead, lip_t], [lip_reach, lip_t - lip_lead]])
+        intersection() {
+            shell();
+            translate([-out_w, seam_y - s[0] - g, -1])
+                cube([2 * out_w, s[0] + g, out_h + 2]);
+            translate([0, 0, -1]) linear_extrude(out_h + 2) wall_band(s[1] + g);
+        }
+}
+
+// The closed end of the shell. Full cavity footprint behind the seam. In front of it a lip, shrunk
+// by the fit so the panel clears it, that backs up the inside of the panel's front wall and carries
+// the two screws pulling the panel's bottom in.
+module floor_plate() {
+    difference() {
+        union() {
+            intersection() {
+                rbox(cav_w + 2 * eps, cav_d + 2 * eps, floor_t, corner_ri + eps);
+                behind(seam_y);
+            }
+            intersection() {
+                rbox(cav_w - 2 * split_fit, cav_d - 2 * split_fit, floor_t,
+                     max(corner_ri - split_fit, 0.5));
+                before(seam_y + eps);
+            }
+        }
+        for (sx = [-1, 1]) translate([sx * px, -py, 0]) {
+            translate([0, 0, -1]) cylinder(d = lid_screw_d + 1.0, h = floor_t + 2);
+            translate([0, 0, -eps])
+                cylinder(d1 = lid_head_d, d2 = lid_screw_d + 1.0, h = lid_head_h + eps);
+        }
+    }
+}
+
+// The ledge overhangs the cavity by ledge_w, which the body cannot print standing on its floor. A 45
+// degree run-up carries it. Behind the seam only: the panel's share of the ledge lies flat on its face.
+module ledge_chamfer() {
+    z0 = lid_z - ledge_h;
+    intersection() {
+        difference() {
+            translate([0, 0, z0 - ledge_w]) rbox(cav_w, cav_d, ledge_w, corner_ri);
+            hull() {
+                translate([0, 0, z0 - ledge_w - eps]) linear_extrude(eps)
+                    rrect(cav_w + 2 * eps, cav_d + 2 * eps, corner_ri + eps);
+                translate([0, 0, z0]) linear_extrude(eps)
+                    rrect(cav_w - 2 * ledge_w, cav_d - 2 * ledge_w,
+                          max(corner_ri - ledge_w, 0.5));
+            }
+        }
+        behind(seam_y);
+    }
+}
+
+// Back shell: everything behind the seam, plus the floor and the board's seat, relieved where the
+// panel's posts reach into it.
 module body() {
     difference() {
         union() {
             intersection() { shell(); behind(seam_y); }
+            seam_lip();
+            floor_plate();
+            pcb_mount_geo();
+            ledge_chamfer();
             lid_posts(1);
-            base_posts(1);
+            lid_post_cone(1);
         }
         lid_post_holes(1);
-        base_post_holes(1);
         lid_posts(-1, split_fit);
         base_posts(-1, split_fit);
     }
 }
 
 // Front panel: grille, speaker mount and the front post of each pair, so the lid screw pulls the
-// panel down from above and the base screw pulls it in from below.
+// panel down from above and the floor screw pulls it in from below.
 module panel() {
     difference() {
         union() {
@@ -414,22 +511,7 @@ module panel() {
         lid_post_holes(-1);
         base_post_holes(-1);
         place_spk_front() spk_cuts(wall);
-    }
-}
-
-// Bottom insert, the same footprint and job as the lid. Carries the board, so the board and its
-// wiring come out of the box together.
-module base() {
-    difference() {
-        union() {
-            rbox(lid_w, lid_d, floor_t, corner_ri);
-            pcb_mount_geo();
-        }
-        for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, 0]) {
-            translate([0, 0, -1]) cylinder(d = lid_screw_d + 1.0, h = floor_t + 2);
-            translate([0, 0, -eps])
-                cylinder(d1 = lid_head_d, d2 = lid_screw_d + 1.0, h = lid_head_h + eps);
-        }
+        seam_lip(split_fit);
     }
 }
 
@@ -465,29 +547,27 @@ module ring_placed() {
     place_spk_front() translate([0, 0, speaker_flange_t]) speaker_ring();
 }
 
-// Every part on one bed, largest face down: both shell halves lie on their backs, which is what
-// puts the grille and the card slot flat on the plate instead of up a wall.
+// Every part on one bed. The body stands on its floor, which is the only orientation that puts the
+// board's rails and posts upright; the panel lies on its face, which puts the grille flat on the
+// plate. Nothing needs support in either.
 module print_plate() {
     g = plate_gap;
     col2 = out_w + g;
-    translate([out_w / 2, 0, out_d / 2]) rotate([-90, 0, 0]) body();
-    translate([out_w / 2, 2 * out_h + g, out_d / 2]) rotate([90, 0, 0]) panel();
+    translate([out_w / 2, out_d / 2, 0]) body();
+    translate([out_w / 2, out_d + g + out_h, out_d / 2]) rotate([90, 0, 0]) panel();
     translate([col2 + lid_w / 2, lid_d / 2, -lid_z]) lid();
-    translate([col2 + lid_w / 2, lid_d + g + lid_d / 2, 0]) base();
-    translate([col2 + ring_w / 2, 2 * (lid_d + g) + ring_w / 2, 0]) speaker_ring();
+    translate([col2 + ring_w / 2, lid_d + g + ring_w / 2, 0]) speaker_ring();
 }
 
 /* ---------------- output ---------------- */
 if (part == "body") body();
 else if (part == "panel") panel();
 else if (part == "lid") lid();
-else if (part == "base") base();
 else if (part == "speaker_ring") speaker_ring();
 else if (part == "print_plate") print_plate();
 else if (part == "assembly") {
     color("SteelBlue") body();
     color("CadetBlue") translate([0, -explode, 0]) panel();
     color("Gainsboro") translate([0, 0, explode]) lid();
-    color("Tan") translate([0, 0, -explode]) base();
     color("DarkOrange") translate([0, -explode / 2, 0]) ring_placed();
 }

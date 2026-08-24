@@ -1,6 +1,6 @@
 # Personal jukebox enclosure
 
-A printed box for an MP3 module, a 57 mm speaker and three buttons. It has five printed parts.
+A printed box for an MP3 module, a 57 mm speaker and three buttons. It has four printed parts.
 
 > **AI wrote this project.** Claude made the OpenSCAD model, the scripts and this README. Measure
 > your parts. Compare them to the dimensions in this README before you print.
@@ -11,7 +11,7 @@ A printed box for an MP3 module, a 57 mm speaker and three buttons. It has five 
 | --- | --- |
 | ![Front](images/front.png) **Front**: the grille | ![Back](images/back.png) **Back**: the microSD slot |
 | ![Right](images/right.png) **Right**: the jack and the micro USB port | ![Left](images/left.png) **Left**: no openings |
-| ![Top](images/top.png) **Top**: the lid and three buttons | ![Bottom](images/bottom.png) **Bottom**: the base plate and four screws |
+| ![Top](images/top.png) **Top**: the lid and three buttons | ![Bottom](images/bottom.png) **Bottom**: the floor is part of the body, with two screws |
 
 ![Exploded](images/exploded.png)
 
@@ -49,19 +49,19 @@ approximately 101 g of filament.
 
 ## Screws
 
-The model needs 14 screws. The head type is as important as the length. Jaycar does not sell the
+The model needs 12 screws. The head type is as important as the length. Jaycar does not sell the
 correct heads, so buy these screws from a fastener supplier.
 
 | Qty | Size | Head | Use |
 | --- | --- | --- | --- |
-| 8 | M3 x 10 | countersunk, 90 degrees | 4 in the lid, 4 in the base |
+| 6 | M3 x 10 | countersunk, 90 degrees | 4 in the lid, 2 up through the floor |
 | 4 | M3 x 6 | pan | the speaker ring |
 | 2 | M2 x 8 | pan | the board |
 
-The lid and the base have a conical recess at each screw. A countersunk head seats in this recess
+The lid and the floor have a conical recess at each screw. A countersunk head seats in this recess
 approximately 1 mm below the surface. A pan head cannot seat in a cone. A pan head stands
-approximately 1.6 mm above the surface. This is a problem at the base, because a rubber foot goes
-over each screw. A foot cannot stick to a surface that has a screw head above it.
+approximately 1.6 mm above the surface. This is a problem at the floor, because a rubber foot goes
+over each of the two screws there. A foot cannot stick to a surface that has a screw head above it.
 
 The speaker ring and the board both have a plain hole at each screw. The head must bear on a flat
 face, so use a pan head.
@@ -71,10 +71,11 @@ diameters. Screws for plastic hold better than machine screws, but machine screw
 
 ## Feet
 
-The bottom of the base plate is flat. There are no recesses for the feet.
+The bottom of the box is flat. There are no recesses for the feet.
 
-Put one rubber foot over each of the four base screws. The foot is 12 x 12 mm and the screw head is
-5.8 mm, so the foot hides the screw. The screw head must be flush. Refer to the section above.
+Use four rubber feet, one in each corner. The two at the front go over the two screws that hold the
+panel down. The foot is 12 x 12 mm and the screw head is 5.8 mm, so the foot hides the screw. Those
+two screw heads must be flush. Refer to the section above.
 
 The feet do two things. They stop the box when it slides. They also separate the box from the bench,
 so the bench does not amplify the vibration of the speaker.
@@ -82,7 +83,7 @@ so the bench does not amplify the vibration of the speaker.
 The feet do not stop the box when it falls over. The box is 91.6 mm tall and 42.5 mm deep. The
 speaker is the heaviest part and its centre is 54 mm above the bench. The box falls over at
 approximately 21 degrees from vertical. A pull on a headphone cable is enough. Put the box against a
-wall, or add mass inside the base.
+wall, or add mass inside the box.
 
 ## Print the parts
 
@@ -91,25 +92,34 @@ wall, or add mass inside the base.
 ```
 
 This command writes `stl/print_plate.stl`. The file contains all five parts. The script rotates each
-part and puts it in position on a bed of **177 x 191 x 36 mm**. Any bed of 200 mm is large enough.
+part and puts it in position on a bed of **177 x 143 x 92 mm**. Any bed of 200 mm is large enough.
 
-- **No part needs support material.** Both halves of the shell lie on their backs. This is the
-  largest face of each half. It also puts the grille and the card slot flat on the bed.
-- **Use 0.2 mm layers and 3 perimeters.** The plate is then 178 layers and approximately 101 g.
+- **No part needs support material.** The body stands upright on its floor. This is the only
+  orientation that puts the rails and posts of the board seat the right way up. The panel lies on its
+  face, which puts the grille flat on the bed. The lid and the ring lie flat.
+- **The body is the tall part.** It makes the plate 91.6 mm high, and most of those layers hold
+  nothing but a thin wall, so they are quick. The volume of plastic is what sets the time, and that
+  has not changed.
+- **Use 0.2 mm layers and 3 perimeters.** The plate is then 458 layers and approximately 101 g.
 - **Use one colour.** No part needs a second colour.
 
-You can also use 0.3 mm layers. No part on the plate needs 0.2 mm. The bed makes the finish of both
-visible faces, because both faces lie against the bed. The only small vertical detail is the
-lettering of 0.8 mm. At 0.3 mm the plate is 119 layers. First set `label_h = 0.9`. The letters are
-then exactly three layers.
+You can also use 0.3 mm layers. No part on the plate needs 0.2 mm. The only small vertical detail is
+the lettering of 0.8 mm. At 0.3 mm the plate is 306 layers. First set `label_h = 0.9`. The letters
+are then exactly three layers.
+
+Three details of the model exist only to keep the plate free of support material. A 45 degree run-up
+carries the ledge of the lid, which would otherwise overhang the cavity by 2 mm. A 45 degree cone
+sits under each of the two lid posts in the back corners, which would otherwise start in mid air. The
+cone is struck from the corner of the box and not from the axis of the post, so every layer of it
+touches a wall. Nothing else on the body overhangs by more than 0.25 mm, except the tops of the three
+openings in the walls, which bridge across 10 mm to 16 mm.
 
 To get one STL file for each part, use `./make-stls.sh`.
 
 | Part | Function | Volume |
 | --- | --- | --- |
-| `body` | the back wall, the side walls and all the openings | 36.2 cm³ |
-| `panel` | the front face, the grille and the speaker mount | 23.3 cm³ |
-| `base` | the bottom plate. It holds the board | 9.9 cm³ |
+| `body` | the back wall, the side walls, the floor, the board seat and all the openings | 46.7 cm³ |
+| `panel` | the front face, the grille and the speaker mount | 22.7 cm³ |
 | `lid` | the top, the buttons and the labels | 8.5 cm³ |
 | `speaker_ring` | it clamps the rim of the speaker | 3.4 cm³ |
 
@@ -119,12 +129,26 @@ To get one STL file for each part, use `./make-stls.sh`.
 box, no screwdriver can reach them. Put the loose panel face down on the bench. Then you can turn
 the screws from above.
 
-**The lid and the base are a matched pair.** Each one has four screws. Each screw goes into a post in
-a corner. Each corner has one post above and one post below. The front post of each pair is part of
-the panel. Therefore the lid screw pulls the panel down. The base screw pulls the panel in.
+**The seam is a half lap.** The two halves do not butt. Down each side seam the body carries the
+inner half of the wall on past the seam as a tongue, and the panel has a groove to match. The tongue
+is thinner over its last 0.6 mm, so it finds the groove before it has to be square to it. The panel
+therefore drops into place and stays there while you drive the screws. From the outside you still see
+one line. Across the bottom the floor does the same job a different way: it reaches forward past the
+seam, stopping 0.25 mm short of the inside of the panel's front wall, so the wall cannot bow inwards.
 
-**The board is bolted to the base plate.** Remove the base and the board and its wires come out
-together. Two M2 screws and two short rails hold the board. The rails prevent movement of the board.
+**The floor is part of the body.** There is no bottom plate. A box open at the top and the bottom is a
+tube open at both ends, and it flexes. Closing one end is what makes it feel solid, and it costs
+nothing to look at, because the floor is the one face nobody ever sees. The front, the top and the
+body are still separate parts, so all three visible surfaces can still be a different colour.
+
+**The lid takes four screws, the floor takes two.** Each lid screw goes down into a post in a corner.
+The two posts at the front are part of the panel, so those two screws pull the panel down. The two
+screws in the floor go up from underneath into two more posts at the front, which are also part of the
+panel, and pull its bottom in. Six M3 screws in total, where the old bottom plate needed eight.
+
+**The board is bolted to the floor.** Two M2 screws and two short rails hold it. The rails prevent
+movement of the board. Take the panel off and the board is in front of you with the whole front of the
+box open, so a short screwdriver reaches everything.
 
 ## Assemble the box
 
@@ -133,25 +157,27 @@ together. Two M2 screws and two short rails hold the board. The rails prevent mo
 2. Put the speaker ring on the rim of the speaker. Install four M3 x 6 screws. The ring clamps the
    rim against the wall. **Do not use a longer screw. A longer screw comes through the front face.**
 
-3. Put the board on the two rails of the base plate. The jack must point to the right. Install two
-   M2 screws. The holes in the board are approximately 3.7 mm, so an M2 head can pull through the
-   board. Use a washer, or change `pcb_screw_d` to 2.6 and use an M3 screw. Do all of the wire work
-   with the board on the loose plate.
+3. Do the wire work on the board while it is still loose on the bench. It is easier there than in the
+   box, and the next steps need the speaker wires already on.
 
 4. Wire the three buttons. Refer to the next section. Install the buttons in the lid. Install the
    nuts on the outside face. The lid is 2 mm thick at each hole, so the thread is long enough.
 
 5. Solder the speaker wires to the S-OUT pair. This pair is at the header end of the board. Make
-   these wires 150 mm to 200 mm long. You must separate the panel and the base plate again.
+   these wires 150 mm to 200 mm long.
 
-6. Hold the panel against the shell. It is loose until you install the screws.
+6. Put the board into the box through the open front. Sit it on the two rails with the jack to the
+   right. There is 8.8 mm of slack at the header end, which is more than the 4 mm the jack stands
+   proud, so drop the board in clear of the right wall and then slide it right until the jack enters
+   its opening. Install two M2 screws. The holes in the board are approximately 3.7 mm, so an M2 head
+   can pull through the board. Use a washer, or change `pcb_screw_d` to 2.6 and use an M3 screw.
 
-7. Move the base plate up under the panel and the shell. Put the board into the cavity first.
-   Install four M3 x 10 screws. The two front screws go into the panel and pull it into position.
-   **Do not use a longer screw. A longer screw touches the board.**
+7. Offer the panel up to the front of the body. The tongue down each side seam finds its groove and
+   holds the panel roughly in place on its own. Install two M3 x 10 screws up through the floor from
+   underneath. They pull the bottom of the panel in.
 
-8. Put the lid on the ledge. Install four more M3 x 10 screws. The two front screws go into the panel
-   again. The lid and the base hold the box closed.
+8. Put the lid on the ledge. Install four M3 x 10 screws. The two front screws go into the panel
+   again and hold its top. **Do not use a longer screw. A longer screw touches the board.**
 
 ## Wire the buttons
 
@@ -203,8 +229,9 @@ this port also supplies power to your module. The header pins marked G and V are
 mouth has a taper of 3 mm on all four sides, so a microSD card enters the slot easily. The card stops
 4.5 mm inside the opening. Use a fingernail for the last part.
 
-**Remove the base.** Lift off the four rubber feet. Remove four screws from the bottom. The plate,
-the board and the card holder come out together. This method always works.
+**Take the front off.** Remove the four screws in the lid and lift it off. Remove the two screws in
+the floor. The panel then comes forward and the board and the card holder are in front of you. This
+method always works.
 
 ## Put music on the card
 
@@ -288,7 +315,7 @@ change the contents. Three items control the dimensions.
 | `-D 'pcb_over_right_f=0.015'`, header pins cut flush | 81.1 x 42.5 x 91.6 |
 | `-D 'speaker_d=40' -D 'speaker_depth=12'` | 86.8 x 42.5 x 74.6 |
 | both of the changes above | 81.1 x 42.5 x 74.6 |
-| `-D 'pcb_seat_h=5'`, shorter posts in the base | 86.8 x 42.5 x 88.6 |
+| `-D 'pcb_seat_h=5'`, the board sits lower on the floor | 86.8 x 42.5 x 88.6 |
 
 **Start with the board.** The model uses a bare board of **69 x 32 mm**. The catalogue gives
 77 x 33 mm. This is the envelope. It includes the header pins at one end and the jack at the other
@@ -300,8 +327,9 @@ These are the most useful parameters.
 - `pcb_w`, `pcb_d`. The board is 69 x 32 mm. All other dimensions scale from these two.
 - `pcb_connectors`. The two openings in the right wall. Each row gives the position along the wall,
   the height above the board, the size, the corner radius and the depth of the outer relief.
-- `pcb_seat_h`. The height of the board above the base plate. This is also the maximum height of the
-  posts in the base. Below approximately 5 mm the screws are too short and the render gives a warning.
+- `pcb_seat_h`. The height of the board above the floor. This is also the height of the two posts at
+  the front that take the floor screws. Below approximately 5 mm those screws are too short to bite
+  and the render gives a warning.
 - `pcb_rail_len_f`. The length of each rail as a fraction of the board. It is 0.5. The rails are long
   enough to hold the board and short enough to clear the posts in the corners.
 - `speaker_flange_t`. The thickness of the rim, 2.5 mm. If the value is too small, the ring does not
@@ -313,8 +341,15 @@ These are the most useful parameters.
 - `button_nut_d`. The diameter of the nut. The nut sits on the **outside** face. `button_body_d` is
   the clearance below the lid. The model puts the lettering clear of the nut and not clear of the
   hole, because the nut is larger than the hole. A driver on the nut is larger again.
+- `floor_t`. The thickness of the floor, 3 mm. The floor is part of the body and closes that end of
+  the shell. It also has to swallow a countersunk head, which takes 1.8 mm of it.
 - `split_clear`. The distance between the seam and the nearest opening in a wall. No opening is ever
-  cut in two. `split_fit` is the clearance where the posts of the panel enter the shell.
+  cut in two. `split_fit` is the clearance where the posts of the panel enter the shell, and also the
+  clearance in the half lap of the seam.
+- `lip_share`. The share of the wall the tongue of the half lap takes. It is 0.5, so the tongue and
+  the strap left on the panel are the same thickness. The render warns below 0.9 mm on either.
+  `lip_len` asks for the length of the tongue and the render clamps it, because the panel is shallow
+  and `lip_land` of its side wall has to stay whole in front of the groove.
 - `sd_flare`. The width of the taper at the card slot. `sd_flare_depth` is its depth. Set
   `sd_flare = 0` for a slot with no taper.
 
@@ -327,7 +362,8 @@ pcb 69 x 32, jack out 3.9537, headers out 6.7896 mm
 pcb screw posts at [[-28.0485, -0.4896], [32.1264, 1.6096]] from board centre
 sd card sits 4.5 mm inside the back wall
 split seam at y -14.35, front panel 6.9 mm deep
-print plate 176.537 x 191.2 mm
+seam half lap: tongue 1.075 x 2.75, panel strap 1.075 mm
+print plate 176.537 x 142.1 mm
 ```
 
 ## Make the renders again

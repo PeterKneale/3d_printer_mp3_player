@@ -19,7 +19,7 @@ if [[ -z ${OPENSCAD:-} ]]; then
   exit 1
 fi
 
-PARTS_ALL=(body panel lid base speaker_ring)
+PARTS_ALL=(body panel lid speaker_ring)
 PLATE=(print_plate)
 
 usage() {
@@ -104,4 +104,4 @@ if (( ${#failed[@]} )); then
 fi
 
 printf '\n%s\n' "${#PARTS[@]} parts written to $OUT/."
-printf '%s\n' "No supports, 0.2 mm layers. Both shell halves print on their backs, rest flat."
+printf '%s\n' "No supports, 0.2 mm layers. The body stands on its floor, the panel lies on its face."
