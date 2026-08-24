@@ -20,18 +20,23 @@ if [[ -z ${OPENSCAD:-} ]]; then
 fi
 
 PARTS_ALL=(body panel lid speaker_ring)
-PLATE=(print_plate)
+ONE_COLOUR=(plate_one_colour)
+TWO_COLOUR=(plate_two_colour plate_lid)
 
 usage() {
   cat <<EOF
-usage: $(basename "$0") [parts|plate] [openscad options]
+usage: $(basename "$0") [parts|one-colour|two-colour] [openscad options]
 
-  parts    the printed parts one STL each, to stl/ (default)
-  plate    all of them on one bed as a single STL, already rotated so nothing needs supports
+  parts        the four printed parts one STL each, in model coordinates (default)
+  one-colour   one bed, all four parts, already rotated so nothing needs supports
+  two-colour   two beds: everything but the lid, then the lid on its own, so a filament
+               change at the label layer colours the lettering and nothing else
+
+"plate" is accepted as an older name for one-colour.
 
 Trailing options pass straight to openscad:
   $(basename "$0") parts -D 'pcb_w=77' -D 'pcb_d=33'
-  $(basename "$0") plate -D 'grille_style="rings"' -D 'button_labels=["<<","||",">>"]'
+  $(basename "$0") one-colour -D 'button_labels=["<<","||",">>"]'
 EOF
 }
 
@@ -41,11 +46,17 @@ esac
 
 SEL=parts
 case ${1:-} in
-  parts|all|plate) SEL=$1; shift ;;
+  parts|all)            SEL=parts; shift ;;
+  one-colour|one|plate) SEL=one-colour; shift ;;
+  two-colour|two)       SEL=two-colour; shift ;;
   ''|-*) ;;                     # no target given, or straight to openscad options
   *) echo "unknown target: $1" >&2; usage >&2; exit 1 ;;
 esac
-if [[ $SEL == plate ]]; then PARTS=("${PLATE[@]}"); else PARTS=("${PARTS_ALL[@]}"); fi
+case $SEL in
+  one-colour) PARTS=("${ONE_COLOUR[@]}") ;;
+  two-colour) PARTS=("${TWO_COLOUR[@]}") ;;
+  *)          PARTS=("${PARTS_ALL[@]}") ;;
+esac
 LOGS=$OUT/logs
 
 mkdir -p "$LOGS"
@@ -103,5 +114,10 @@ if (( ${#failed[@]} )); then
   exit 1
 fi
 
-printf '\n%s\n' "${#PARTS[@]} parts written to $OUT/."
-printf '%s\n' "No supports, 0.2 mm layers. The body stands on its floor, the panel lies on its face."
+printf '\n%s\n' "${#PARTS[@]} file(s) written to $OUT/."
+printf '%s\n' "No supports anywhere, 0.2 mm layers. The body stands on its floor, the panel lies on its face."
+case $SEL in
+  one-colour) printf '%s\n' "One bed. Slice $OUT/plate_one_colour.stl and print it." ;;
+  two-colour) printf '%s\n' "Two beds. Print $OUT/plate_two_colour.stl, then $OUT/plate_lid.stl with a filament change at the height echoed above." ;;
+  *)          printf '%s\n' "These are in model coordinates, not print orientation. Lay the panel grille down before you slice it." ;;
+esac

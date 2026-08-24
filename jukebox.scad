@@ -3,7 +3,10 @@
 // The shell is sized by its contents: there is nothing to ask for, only components to describe.
 
 /* [Output] */
-part = "assembly";        // [assembly, body, panel, lid, speaker_ring, print_plate, none]
+// Two ways to print it. one_colour puts all four parts on one bed. two_colour leaves the lid off
+// that bed and gives it one of its own, because a filament change is a height and not a part: made
+// at the label layer on a shared bed it would also cut through the body, the panel and the ring.
+part = "assembly";        // [assembly, body, panel, lid, speaker_ring, plate_one_colour, plate_two_colour, plate_lid, none]
 explode = 30;             // lid lift in the assembly view
 
 /* [Shell] */
@@ -65,11 +68,15 @@ button_body_d = 10.5;     // body and shoulder clearance under the lid
 button_nut_d = 12;        // nut across corners, and it sits on the outside face
 button_panel_t = 2.0;     // local lid thickness at each button
 button_pitch = 22;
-button_row_y = 3;         // row offset from the lid centre
-button_labels = ["PREV", "PLAY", "NEXT"];
-label_size = 4.5;
+button_row_y = 0;         // row offset from the lid centre. Centred, because a label sits either side
+// Each of the outer buttons does two jobs, so each gets two labels: what a press does above it, what
+// a hold does below it. The lettering is sized to be read rather than felt, on the assumption that a
+// filament change at the label layer gives it a colour of its own.
+button_labels = ["Previous", "Play", "Next"];
+button_labels_below = ["Vol -", "Pause", "Vol +"];
+label_size = 3.5;
 label_h = 0.8;            // how far the lettering stands proud of the lid
-label_gap = 3.0;          // lettering clear of the nut above it. Generous on purpose: the letters
+label_gap = 3.5;          // lettering clear of the nut beside it. Generous on purpose: the letters
                           // stand proud, and a driver on the nut is wider than the nut
 
 /* [Connector openings] */
@@ -135,8 +142,9 @@ spk_pcd = speaker_d + 2 * speaker_boss_gap + speaker_boss_d;
 grille_d = speaker_d - 2 * grille_margin;
 
 button_count = len(button_labels);
+label_rows = [[1, button_labels], [-1, button_labels_below]];
 // Clear of the nut, not of the hole. text() gives no metrics, so the block is taken as label_size
-// tall, which overstates it by about 5% and errs the right way.
+// tall. A capital or an ascender overruns that by about a third, which label_gap has to cover.
 label_offset = button_nut_d / 2 + label_gap + label_size / 2;
 btn_req_w = (button_count - 1) * button_pitch + button_body_d + 6;
 
@@ -173,8 +181,11 @@ post_taper = post_r + corner_ri + 0.5;
 base_post_h = pcb_seat_h;      // the board underside is as high as a base post may reach
 plate_gap = 8;
 ring_w = speaker_d + 4;
-plate_w = out_w + plate_gap + max(lid_w, ring_w);
-plate_h = max(out_d + plate_gap + out_h, lid_d + plate_gap + ring_w);
+col1_h = out_d + plate_gap + out_h;                 // the body and the panel share a column
+plate1_w = out_w + plate_gap + max(lid_w, ring_w);  // one colour, all four parts
+plate1_h = max(col1_h, lid_d + plate_gap + ring_w);
+plate2_w = out_w + plate_gap + ring_w;              // two colour, the lid left off
+plate2_h = max(col1_h, ring_w);
 
 btn_y = button_row_y;
 
@@ -201,12 +212,17 @@ echo(str("pcb screw posts at ", pcb_hole_pts, " from board centre"));
 echo(str("sd card sits ", sd_reach, " mm inside the back wall"));
 echo(str("split seam at y ", seam_y, ", front panel ", face_d, " mm deep"));
 echo(str("seam half lap: tongue ", lip_t, " x ", lip_reach, ", panel strap ", lip_strap, " mm"));
-echo(str("print plate ", plate_w, " x ", plate_h, " mm"));
+echo(str("plate one colour ", plate1_w, " x ", plate1_h, " x ", out_h, " mm"));
+echo(str("plate two colour ", plate2_w, " x ", plate2_h, " x ", out_h,
+         " mm, plus lid ", lid_w, " x ", lid_d, " x ", lid_t + label_h, " mm"));
+echo(str("colour change the lid at ", lid_t, " mm"));
 if (face_d - wall < speaker_flange_t + 1)
     echo("WARNING: front panel too shallow for the speaker bosses");
 if (lip_reach < lip_lead + 1) echo("WARNING: front panel too shallow for the seam lip");
 if (min(lip_t, lip_strap) < 0.9) echo("WARNING: seam half lap leaves a wall under 0.9 mm");
 if (base_post_h < 5) echo("WARNING: pcb_seat_h too low for the base screws to bite");
+if (len(button_labels_below) != button_count)
+    echo("WARNING: button_labels_below is not the same length as button_labels");
 
 /* ---------------- helpers ---------------- */
 module rrect(w, d, r) {
@@ -315,10 +331,13 @@ module cavity_clip() {
 // Posts fill the corner rather than standing off it. A cylinder tangent to two walls is joined to
 // them along a line each and leaves a void behind it in the fillet; drawn about the corner's own
 // arc centre and clipped to the cavity, the same post meets the walls over an area instead.
+// Clipped to eps outside the cavity rather than to it. The post's outer edge would otherwise graze
+// the corner fillet exactly, and two arcs of different radii do not facet the same way, which leaves
+// a sliver of a shell behind in the corner. Overlapping the wall by a hair makes the union clean.
 module post_profile(sx, sy, g = 0) {
     offset(g) intersection() {
         translate([sx * corner_cx, sy * corner_cy]) circle(r = post_r);
-        rrect(cav_w, cav_d, corner_ri);
+        rrect(cav_w + 2 * eps, cav_d + 2 * eps, corner_ri + eps);
     }
 }
 
@@ -534,12 +553,11 @@ module lid() {
             }
         }
         // Labels stand label_h proud of the top face rather than being cut into it.
-        for (i = [0:button_count - 1])
+        for (r = label_rows, i = [0:button_count - 1])
             translate([(i - (button_count - 1) / 2) * button_pitch,
-                       btn_y - label_offset, lid_t - eps])
+                       btn_y + r[0] * label_offset, lid_t - eps])
                 linear_extrude(label_h + eps)
-                    text(button_labels[i], size = label_size, halign = "center",
-                         valign = "center");
+                    text(r[1][i], size = label_size, halign = "center", valign = "center");
     }
 }
 
@@ -547,16 +565,32 @@ module ring_placed() {
     place_spk_front() translate([0, 0, speaker_flange_t]) speaker_ring();
 }
 
-// Every part on one bed. The body stands on its floor, which is the only orientation that puts the
-// board's rails and posts upright; the panel lies on its face, which puts the grille flat on the
-// plate. Nothing needs support in either.
-module print_plate() {
-    g = plate_gap;
-    col2 = out_w + g;
+// The body stands on its floor, which is the only orientation that puts the board's rails and posts
+// upright; the panel lies on its face, which puts the grille flat on the plate. Between them they
+// fill the first column of either bed, and neither needs support.
+module plate_column() {
     translate([out_w / 2, out_d / 2, 0]) body();
-    translate([out_w / 2, out_d + g + out_h, out_d / 2]) rotate([90, 0, 0]) panel();
+    translate([out_w / 2, out_d + plate_gap + out_h, out_d / 2]) rotate([90, 0, 0]) panel();
+}
+
+// One colour: one bed, one print, nothing left over.
+module plate_one_colour() {
+    col2 = out_w + plate_gap;
+    plate_column();
     translate([col2 + lid_w / 2, lid_d / 2, -lid_z]) lid();
-    translate([col2 + ring_w / 2, lid_d + g + ring_w / 2, 0]) speaker_ring();
+    translate([col2 + ring_w / 2, lid_d + plate_gap + ring_w / 2, 0]) speaker_ring();
+}
+
+// Two colour, bed one: everything whose colour never changes.
+module plate_two_colour() {
+    plate_column();
+    translate([out_w + plate_gap + ring_w / 2, ring_w / 2, 0]) speaker_ring();
+}
+
+// Two colour, bed two: the lid on its own, sitting on the plate rather than at its height in the
+// assembly, so the change of filament lands at lid_t and touches nothing else.
+module plate_lid() {
+    translate([lid_w / 2, lid_d / 2, -lid_z]) lid();
 }
 
 /* ---------------- output ---------------- */
@@ -564,7 +598,9 @@ if (part == "body") body();
 else if (part == "panel") panel();
 else if (part == "lid") lid();
 else if (part == "speaker_ring") speaker_ring();
-else if (part == "print_plate") print_plate();
+else if (part == "plate_one_colour") plate_one_colour();
+else if (part == "plate_two_colour") plate_two_colour();
+else if (part == "plate_lid") plate_lid();
 else if (part == "assembly") {
     color("SteelBlue") body();
     color("CadetBlue") translate([0, -explode, 0]) panel();

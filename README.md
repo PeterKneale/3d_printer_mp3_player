@@ -26,6 +26,7 @@ The box is **86.8 x 42.5 x 91.6 mm**. It stands upright. The speaker points forw
 - [How the box comes apart](#how-the-box-comes-apart)
 - [Assemble the box](#assemble-the-box)
 - [Wire the buttons](#wire-the-buttons)
+- [Use the box](#use-the-box)
 - [Change the music later](#change-the-music-later)
 - [Put music on the card](#put-music-on-the-card)
 - [Build the STL files](#build-the-stl-files)
@@ -44,8 +45,8 @@ The box is **86.8 x 42.5 x 91.6 mm**. It stands upright. The speaker points forw
 
 These prices are the Jaycar list prices in August 2026. The prices change.
 
-You also need a microSD card and 2 m of wire. Use wire of 28 AWG to 30 AWG. You also need
-approximately 101 g of filament.
+You also need a microSD card, a micro USB cable, a 5 V USB charger and 2 m of wire. Use wire of
+28 AWG to 30 AWG. You also need approximately 101 g of filament.
 
 ## Screws
 
@@ -87,34 +88,93 @@ wall, or add mass inside the box.
 
 ## Print the parts
 
+Choose one of two setups. They differ only in the lid.
+
+### Setup one: one colour
+
 ```sh
-./make-stls.sh plate
+./make-stls.sh one-colour
 ```
 
-This command writes `stl/print_plate.stl`. The file contains all five parts. The script rotates each
-part and puts it in position on a bed of **177 x 143 x 92 mm**. Any bed of 200 mm is large enough.
+One file, `stl/plate_one_colour.stl`, holding all four parts on a bed of **177 x 143 x 92 mm**. Slice
+it and print it. That is the whole job.
+
+### Setup two: two colours
+
+```sh
+./make-stls.sh two-colour
+```
+
+Two files, printed one after the other.
+
+| Order | File | Bed | Layers | Colour |
+| --- | --- | --- | --- | --- |
+| 1 | `stl/plate_two_colour.stl` | 156 x 143 x 92 mm | 458 | one colour throughout |
+| 2 | `stl/plate_lid.stl` | 82 x 38 x 4 mm | 19 | change filament at **3.0 mm** |
+
+The lettering stands 0.8 mm proud of the top of the lid and nothing else on the lid reaches that
+height, so one filament change prints all six labels in a second colour. No multi material hardware
+is needed. The lid is 3.8 mm tall, its top face is at 3.0 mm, and the letters are the four layers
+above it at 0.2 mm.
+
+**This is why the lid gets a bed of its own.** A colour change is a height, not a part. Made at 3.0 mm
+on a shared bed it would also land partway up the body, the panel and the ring.
+
+#### Setting the colour change in the slicer
+
+This is a **layer change**, not a property of the STL file. The file cannot carry it, so nothing in
+the model will offer it to you. You add it in the slicer, and there are two things to get right
+before it appears at all.
+
+1. **Add a second filament first.** In Bambu Studio the filament list is at the top left of the
+   Prepare tab. Press the **+** beside the swatches and set the second colour. With only one filament
+   in the project there is no colour to change to, so the option is not offered.
+2. **Slice, then go to Preview.** The layer slider and its tools live in Preview and do not exist in
+   Prepare. This is what most people are missing when they cannot find the setting.
+3. **Drag the vertical slider on the right** until the lettering first appears in the preview. That
+   is the layer to change on. Trust what you see rather than counting: it lands at Z **3.2 mm**, the
+   first of the four layers above the 3.0 mm top face.
+4. **Click the + on the slider handle**, or right click it, and choose the filament change. Pick
+   filament 2. Without an AMS, choose the pause instead and swap the spool by hand when it stops.
+5. **Slice again and scrub the slider.** Everything below 3.0 mm should be the first colour and all
+   six labels the second. If the letters are the wrong colour you are one layer out.
+
+PrusaSlicer, Orca and Cura all work the same way. The control is on the layer slider in the sliced
+preview, and it is variously called add filament change, add colour change or add pause.
+
+Print the lid first. It takes minutes, and it tells you whether 3.5 mm lettering resolves on your
+machine and whether the colour change landed on the right layer, before you commit to the 458 layer
+bed. If the strokes come out thin, raise `label_size` and print it again.
+
+Contrast is what makes small lettering readable, so with a second colour the type can be finer than
+relief alone allows. That is why `label_size` is 3.5 mm. In one colour you will want it nearer 4.5.
+
+### Either way
+
+Any bed of 200 mm is large enough for both setups.
 
 - **No part needs support material.** The body stands upright on its floor. This is the only
   orientation that puts the rails and posts of the board seat the right way up. The panel lies on its
   face, which puts the grille flat on the bed. The lid and the ring lie flat.
-- **The body is the tall part.** It makes the plate 91.6 mm high, and most of those layers hold
-  nothing but a thin wall, so they are quick. The volume of plastic is what sets the time, and that
-  has not changed.
-- **Use 0.2 mm layers and 3 perimeters.** The plate is then 458 layers and approximately 101 g.
-- **Use one colour.** No part needs a second colour.
+- **The body is the tall part.** It makes its bed 91.6 mm high, and most of those layers hold nothing
+  but a thin wall, so they are quick. The volume of plastic is what sets the time, and that is the
+  same in both setups.
+- **Use 0.2 mm layers and 3 perimeters.** Approximately 101 g in total.
 
-You can also use 0.3 mm layers. No part on the plate needs 0.2 mm. The only small vertical detail is
-the lettering of 0.8 mm. At 0.3 mm the plate is 306 layers. First set `label_h = 0.9`. The letters
-are then exactly three layers.
+You can also use 0.3 mm layers. No part needs 0.2 mm. The only small vertical detail is the lettering
+of 0.8 mm. At 0.3 mm the tall bed is 306 layers. First set `label_h = 0.9`. The letters are then
+exactly three layers, and the colour change is still at 3.0 mm.
 
-Three details of the model exist only to keep the plate free of support material. A 45 degree run-up
+Three details of the model exist only to keep both setups free of support material. A 45 degree run-up
 carries the ledge of the lid, which would otherwise overhang the cavity by 2 mm. A 45 degree cone
 sits under each of the two lid posts in the back corners, which would otherwise start in mid air. The
 cone is struck from the corner of the box and not from the axis of the post, so every layer of it
 touches a wall. Nothing else on the body overhangs by more than 0.25 mm, except the tops of the three
 openings in the walls, which bridge across 10 mm to 16 mm.
 
-To get one STL file for each part, use `./make-stls.sh`.
+To get one STL file for each part, use `./make-stls.sh parts`. Those come out in model coordinates
+rather than print orientation, so lay the panel grille down before you slice it. They are for
+reprinting a single part, not for a first build.
 
 | Part | Function | Volume |
 | --- | --- | --- |
@@ -216,6 +276,21 @@ The pads are small. They are 0.6 mm to 0.9 mm.
   You cannot repair a pad that comes off this board.
 - The button has two solder tags and no polarity. Connect either wire to either tag.
 
+## Use the box
+
+Plug the micro USB into a 5 V charger. There is no power switch. The module draws almost nothing
+until it plays.
+
+| Action | Effect |
+| --- | --- |
+| Press **Previous** or **Next** | previous track, next track |
+| **Hold** **Previous** or **Next** | volume down, volume up |
+| Press **Play** | play, or pause |
+
+The volume is the part nobody guesses, so the lid says it. Each of the two outer buttons does two
+jobs, and the label above each one is what a press does while the label below it is what a hold does.
+The board has no separate volume control that reaches the outside of the box.
+
 ## Change the music later
 
 There are three methods. You will use the first method most.
@@ -223,7 +298,9 @@ There are three methods. You will use the first method most.
 **Use the micro USB port. The box stays closed.** The module gives a computer access to the card
 through this port. Connect the cable. Copy the files. Disconnect the cable. The opening has a step.
 It is larger and shallower on the outside face, so a cable with a large moulding also seats. Check if
-this port also supplies power to your module. The header pins marked G and V are the 5 V input.
+**This port also supplies the power.** A charger powers the box, and a computer powers it and gives
+access to the card at the same time. The header pins marked G and V are the 5 V input if you would
+rather bring power in some other way, but then you need an opening for the lead, and there is none.
 
 **Use the card slot. The box stays closed.** The slot is in the back wall. It is 13 x 3.2 mm. The
 mouth has a taper of 3 mm on all four sides, so a microSD card enters the slot easily. The card stops
@@ -279,8 +356,9 @@ attribute alone makes a second file on the card.
 You need this section only if you change the model. The `stl/` directory already has the files.
 
 ```sh
-./make-stls.sh          # one STL file for each of the five parts
-./make-stls.sh plate    # all five parts on one bed, in one STL file
+./make-stls.sh                # one STL file for each of the four parts
+./make-stls.sh one-colour     # all four on one bed, in one STL file
+./make-stls.sh two-colour     # two beds: everything but the lid, then the lid on its own
 ./make-stls.sh --help
 ```
 
@@ -292,7 +370,7 @@ The script sends the arguments after the target to openscad:
 
 ```sh
 ./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh plate -D 'button_labels=["<<","||",">>"]'
+./make-stls.sh one-colour -D 'button_labels=["<<","||",">>"]' -D 'button_labels_below=["","",""]'
 ```
 
 Set `OPENSCAD=/path/to/openscad` if the script cannot find openscad. You can also open
@@ -338,6 +416,11 @@ These are the most useful parameters.
   height of the screw head above the wall. If you change it, change the screw length.
 - `button_hole_d`. The diameter of the hole, 7.2 mm. Measure your buttons. The bushing diameter is
   not the same on all buttons of this family.
+- `button_labels` and `button_labels_below`. The upper and the lower row of lettering, one entry per
+  button. Both lists must be the same length, and the render warns if they are not. Give an entry an
+  empty string for a button that needs only one label.
+- `label_size`. The height of the lettering, 3.5 mm. It is small because a colour change carries the
+  contrast. Print it in one colour and you will want 4.5 mm.
 - `button_nut_d`. The diameter of the nut. The nut sits on the **outside** face. `button_body_d` is
   the clearance below the lid. The model puts the lettering clear of the nut and not clear of the
   hole, because the nut is larger than the hole. A driver on the nut is larger again.
