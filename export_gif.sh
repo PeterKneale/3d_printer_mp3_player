@@ -34,7 +34,7 @@ rot_x=68
 rot_y=0
 
 # yaw: one full turn at a fixed step, so the last frame leads back to the first
-step=10
+step=5
 dist=370
 fps=15
 
