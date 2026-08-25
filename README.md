@@ -172,9 +172,9 @@ cone is struck from the corner of the box and not from the axis of the post, so 
 touches a wall. Nothing else on the body overhangs by more than 0.25 mm, except the tops of the three
 openings in the walls, which bridge across 10 mm to 16 mm.
 
-To get one STL file for each part, use `./make-stls.sh parts`. Those come out in model coordinates
-rather than print orientation, so lay the panel grille down before you slice it. They are for
-reprinting a single part, not for a first build.
+To get one STL file for each part, use `./make-stls.sh parts`. They are written as `stl/part_*.stl`
+and come out in model coordinates rather than print orientation, so lay the panel grille down before
+you slice it. They are for reprinting a single part, not for a first build.
 
 | Part | Function | Volume |
 | --- | --- | --- |

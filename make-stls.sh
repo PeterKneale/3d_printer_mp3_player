@@ -57,6 +57,8 @@ case $SEL in
   two-colour) PARTS=("${TWO_COLOUR[@]}") ;;
   *)          PARTS=("${PARTS_ALL[@]}") ;;
 esac
+# The plate targets are already named plate_*. Give the single parts a prefix of their own.
+PREFIX=; [[ $SEL == parts ]] && PREFIX=part_
 LOGS=$OUT/logs
 
 mkdir -p "$LOGS"
@@ -75,12 +77,13 @@ fi
 
 printf '%s\n' "openscad: $OPENSCAD"
 [[ $# -gt 0 ]] && printf '%s\n' "overrides: $*"
-printf '\n%-14s %10s %8s  %s\n' PART SIZE TIME STATUS
-printf '%s\n' "------------------------------------------------------------"
+printf '\n%-18s %10s %8s  %s\n' FILE SIZE TIME STATUS
+printf '%s\n' "----------------------------------------------------------------"
 
 for part in "${PARTS[@]}"; do
-  stl=$OUT/$part.stl
-  log=$LOGS/$part.log
+  name=$PREFIX$part
+  stl=$OUT/$name.stl
+  log=$LOGS/$name.log
   start=$SECONDS
 
   if ! "$OPENSCAD" -o "$stl" -D "part=\"$part\"" "$@" "$SCAD" >"$log" 2>&1; then
@@ -101,7 +104,7 @@ for part in "${PARTS[@]}"; do
   else
     human=-
   fi
-  printf '%-14s %10s %7ss  %s\n' "$part" "$human" "$elapsed" "$status"
+  printf '%-18s %10s %7ss  %s\n' "$name" "$human" "$elapsed" "$status"
 done
 
 # The model echoes resolved dimensions on every render, and they are the numbers
