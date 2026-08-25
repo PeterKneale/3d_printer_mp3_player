@@ -68,16 +68,16 @@ button_body_d = 10.5;     // body and shoulder clearance under the lid
 button_nut_d = 12;        // nut across corners, and it sits on the outside face
 button_panel_t = 2.0;     // local lid thickness at each button
 button_pitch = 22;
-button_row_y = 0;         // row offset from the lid centre. Centred, because a label sits either side
-// Each of the outer buttons does two jobs, so each gets two labels: what a press does above it, what
-// a hold does below it. The lettering is sized to be read rather than felt, on the assumption that a
-// filament change at the label layer gives it a colour of its own.
-button_labels = ["Previous", "Play", "Next"];
-button_labels_below = ["Vol -", "Pause", "Vol +"];
-label_size = 3.5;
-label_h = 0.8;            // how far the lettering stands proud of the lid
-label_gap = 3.5;          // lettering clear of the nut beside it. Generous on purpose: the letters
-                          // stand proud, and a driver on the nut is wider than the nut
+button_row_y = 0;         // row offset from the lid centre. Centred, because an icon sits either side
+// Each of the outer buttons does two jobs, so each gets two icons: what a press does above it, what
+// a hold does below it.
+button_icons = ["prev", "play", "next"];
+button_icons_below = ["vol_down", "pause", "vol_up"];
+icon_size = 4.0;          // icon height, and the block the row offset is figured from
+icon_t = 1.2;             // every stroke and bar. Three beads at a 0.4 mm nozzle, so none drops out
+icon_gap = 0.9;           // between the parts of one icon
+icon_relief = 0.8;        // how far the icon stands proud of the lid
+icon_clear = 3.5;         // icon clear of the nut beside it, because a driver is wider than the nut
 
 /* [Connector openings] */
 // Openings in the jack-end wall. [fraction across the board from the back edge,
@@ -141,11 +141,10 @@ spk_panel = speaker_d + 2 * speaker_edge;
 spk_pcd = speaker_d + 2 * speaker_boss_gap + speaker_boss_d;
 grille_d = speaker_d - 2 * grille_margin;
 
-button_count = len(button_labels);
-label_rows = [[1, button_labels], [-1, button_labels_below]];
-// Clear of the nut, not of the hole. text() gives no metrics, so the block is taken as label_size
-// tall. A capital or an ascender overruns that by about a third, which label_gap has to cover.
-label_offset = button_nut_d / 2 + label_gap + label_size / 2;
+button_count = len(button_icons);
+icon_rows = [[1, button_icons], [-1, button_icons_below]];
+// Clear of the nut, not of the hole. Every icon is exactly icon_size tall, so nothing overruns.
+icon_offset = button_nut_d / 2 + icon_clear + icon_size / 2;
 btn_req_w = (button_count - 1) * button_pitch + button_body_d + 6;
 
 // Depth is set by the front panel, not the board. Every wall opening is placed off the board and
@@ -214,15 +213,15 @@ echo(str("split seam at y ", seam_y, ", front panel ", face_d, " mm deep"));
 echo(str("seam half lap: tongue ", lip_t, " x ", lip_reach, ", panel strap ", lip_strap, " mm"));
 echo(str("plate one colour ", plate1_w, " x ", plate1_h, " x ", out_h, " mm"));
 echo(str("plate two colour ", plate2_w, " x ", plate2_h, " x ", out_h,
-         " mm, plus lid ", lid_w, " x ", lid_d, " x ", lid_t + label_h, " mm"));
+         " mm, plus lid ", lid_w, " x ", lid_d, " x ", lid_t + icon_relief, " mm"));
 echo(str("colour change the lid at ", lid_t, " mm"));
 if (face_d - wall < speaker_flange_t + 1)
     echo("WARNING: front panel too shallow for the speaker bosses");
 if (lip_reach < lip_lead + 1) echo("WARNING: front panel too shallow for the seam lip");
 if (min(lip_t, lip_strap) < 0.9) echo("WARNING: seam half lap leaves a wall under 0.9 mm");
 if (base_post_h < 5) echo("WARNING: pcb_seat_h too low for the base screws to bite");
-if (len(button_labels_below) != button_count)
-    echo("WARNING: button_labels_below is not the same length as button_labels");
+if (len(button_icons_below) != button_count)
+    echo("WARNING: button_icons_below is not the same length as button_icons");
 
 /* ---------------- helpers ---------------- */
 module rrect(w, d, r) {
@@ -412,6 +411,58 @@ module connector_cuts() {
     }
 }
 
+/* ---------------- icons ---------------- */
+// Drawn, not set in a font. No font OpenSCAD can reach carries the media control glyphs, and an icon
+// set drawn on a 24 px screen grid puts its strokes under one extrusion at this size, which is what
+// broke the lettering. Here every stroke is icon_t and nothing is at the mercy of a nozzle.
+module icon_tri(dir, w) {
+    polygon([[-dir * w / 2, -icon_size / 2], [-dir * w / 2, icon_size / 2], [dir * w / 2, 0]]);
+}
+
+module icon_bar(w = icon_t, h = icon_size) { square([w, h], center = true); }
+
+// Two triangles running into a bar, the bar on the leading edge.
+module icon_skip(dir) {
+    tw = icon_size * 0.55;
+    w = 2 * tw + icon_t;
+    for (i = [0, 1]) translate([dir * (-w / 2 + tw / 2 + i * tw), 0]) icon_tri(dir, tw);
+    translate([dir * (w / 2 - icon_t / 2), 0]) icon_bar();
+}
+
+module icon_pause() {
+    for (s = [-1, 1]) translate([s * (icon_t + icon_gap) / 2, 0]) icon_bar();
+}
+
+// Neck and cone in one outline. Arcs are what a screen icon would add here, and they are exactly
+// the stroke that does not survive at 4 mm, so the sign to the right carries the meaning instead.
+module icon_speaker(w) {
+    n = w * 0.35;
+    k = icon_t / 2;       // neck half height, tied to the stroke so it cannot thin out on its own
+    polygon([[-w / 2, -k], [-w / 2 + n, -k], [w / 2, -icon_size / 2],
+             [w / 2, icon_size / 2], [-w / 2 + n, k], [-w / 2, k]]);
+}
+
+module icon_vol(sign) {
+    sw = icon_size * 0.85;
+    mw = icon_size * 0.62;
+    w = sw + icon_gap + mw;
+    translate([-w / 2 + sw / 2, 0]) icon_speaker(sw);
+    translate([w / 2 - mw / 2, 0]) {
+        icon_bar(mw, icon_t);
+        if (sign > 0) icon_bar(icon_t, mw);
+    }
+}
+
+module icon(name) {
+    if      (name == "prev")     icon_skip(-1);
+    else if (name == "play")     icon_tri(1, icon_size * 0.85);
+    else if (name == "next")     icon_skip(1);
+    else if (name == "vol_down") icon_vol(-1);
+    else if (name == "pause")    icon_pause();
+    else if (name == "vol_up")   icon_vol(1);
+    else echo(str("WARNING: no icon named ", name));
+}
+
 /* ---------------- parts ---------------- */
 module before(y1) { translate([-out_w, y1 - 2 * out_d, -1]) cube([2 * out_w, 2 * out_d, out_h + 2]); }
 module behind(y1) { translate([-out_w, y1, -1]) cube([2 * out_w, 2 * out_d, out_h + 2]); }
@@ -552,12 +603,12 @@ module lid() {
                 cylinder(d1 = lid_screw_d + 1.0, d2 = lid_head_d, h = lid_head_h + eps);
             }
         }
-        // Labels stand label_h proud of the top face rather than being cut into it.
-        for (r = label_rows, i = [0:button_count - 1])
+        // Icons stand icon_relief proud of the top face rather than being cut into it.
+        for (r = icon_rows, i = [0:button_count - 1])
             translate([(i - (button_count - 1) / 2) * button_pitch,
-                       btn_y + r[0] * label_offset, lid_t - eps])
-                linear_extrude(label_h + eps)
-                    text(r[1][i], size = label_size, halign = "center", valign = "center");
+                       btn_y + r[0] * icon_offset, lid_t - eps])
+                linear_extrude(icon_relief + eps)
+                    icon(r[1][i]);
     }
 }
 

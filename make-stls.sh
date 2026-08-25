@@ -36,7 +36,7 @@ usage: $(basename "$0") [parts|one-colour|two-colour] [openscad options]
 
 Trailing options pass straight to openscad:
   $(basename "$0") parts -D 'pcb_w=77' -D 'pcb_d=33'
-  $(basename "$0") one-colour -D 'button_labels=["<<","||",">>"]'
+  $(basename "$0") one-colour -D 'button_icons=["prev","play","next"]'
 EOF
 }
 

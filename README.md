@@ -112,10 +112,10 @@ Two files, printed one after the other.
 | 1 | `stl/plate_two_colour.stl` | 156 x 143 x 92 mm | 458 | one colour throughout |
 | 2 | `stl/plate_lid.stl` | 82 x 38 x 4 mm | 19 | change filament at **3.0 mm** |
 
-The lettering stands 0.8 mm proud of the top of the lid and nothing else on the lid reaches that
-height, so one filament change prints all six labels in a second colour. No multi material hardware
-is needed. The lid is 3.8 mm tall, its top face is at 3.0 mm, and the letters are the four layers
-above it at 0.2 mm.
+The icons stand 0.8 mm proud of the top of the lid and nothing else on the lid reaches that height,
+so one filament change prints all six of them in a second colour. No multi material hardware is
+needed. The lid is 3.8 mm tall, its top face is at 3.0 mm, and the icons are the four layers above it
+at 0.2 mm.
 
 **This is why the lid gets a bed of its own.** A colour change is a height, not a part. Made at 3.0 mm
 on a shared bed it would also land partway up the body, the panel and the ring.
@@ -131,23 +131,30 @@ before it appears at all.
    in the project there is no colour to change to, so the option is not offered.
 2. **Slice, then go to Preview.** The layer slider and its tools live in Preview and do not exist in
    Prepare. This is what most people are missing when they cannot find the setting.
-3. **Drag the vertical slider on the right** until the lettering first appears in the preview. That
+3. **Drag the vertical slider on the right** until the icons first appear in the preview. That
    is the layer to change on. Trust what you see rather than counting: it lands at Z **3.2 mm**, the
    first of the four layers above the 3.0 mm top face.
 4. **Click the + on the slider handle**, or right click it, and choose the filament change. Pick
    filament 2. Without an AMS, choose the pause instead and swap the spool by hand when it stops.
 5. **Slice again and scrub the slider.** Everything below 3.0 mm should be the first colour and all
-   six labels the second. If the letters are the wrong colour you are one layer out.
+   six icons the second. If the icons are the wrong colour you are one layer out.
 
 PrusaSlicer, Orca and Cura all work the same way. The control is on the layer slider in the sliced
 preview, and it is variously called add filament change, add colour change or add pause.
 
-Print the lid first. It takes minutes, and it tells you whether 3.5 mm lettering resolves on your
-machine and whether the colour change landed on the right layer, before you commit to the 458 layer
-bed. If the strokes come out thin, raise `label_size` and print it again.
+Print the lid first. It takes minutes, and it tells you whether the colour change landed on the right
+layer before you commit to the 458 layer bed.
 
-Contrast is what makes small lettering readable, so with a second colour the type can be finer than
-relief alone allows. That is why `label_size` is 3.5 mm. In one colour you will want it nearer 4.5.
+**The lid carries icons, not words.** An earlier version set the six labels in type at 3.5 mm and it
+did not survive the nozzle: the stems of Liberation Sans work out near 0.34 mm at that size, under
+one 0.42 mm extrusion, so the slicer dropped them. Letters came out broken and the plus on volume up
+vanished altogether. The icons are drawn as solid triangles and bars instead, and every stroke is
+`icon_t`, which is 1.2 mm, or three beads at a 0.4 mm nozzle. Nothing on the lid can now fall under
+one extrusion.
+
+They are drawn in the model rather than imported. No font OpenSCAD can reach carries the media
+control glyphs, and an icon set drawn on a 24 px screen grid lands back under one extrusion when it
+is scaled to 4 mm.
 
 ### Either way
 
@@ -161,9 +168,9 @@ Any bed of 200 mm is large enough for both setups.
   same in both setups.
 - **Use 0.2 mm layers and 3 perimeters.** Approximately 101 g in total.
 
-You can also use 0.3 mm layers. No part needs 0.2 mm. The only small vertical detail is the lettering
-of 0.8 mm. At 0.3 mm the tall bed is 306 layers. First set `label_h = 0.9`. The letters are then
-exactly three layers, and the colour change is still at 3.0 mm.
+You can also use 0.3 mm layers. No part needs 0.2 mm. The only small vertical detail is the icon
+relief of 0.8 mm. At 0.3 mm the tall bed is 306 layers. First set `icon_relief = 0.9`. The icons are
+then exactly three layers, and the colour change is still at 3.0 mm.
 
 Three details of the model exist only to keep both setups free of support material. A 45 degree run-up
 carries the ledge of the lid, which would otherwise overhang the cavity by 2 mm. A 45 degree cone
@@ -370,7 +377,7 @@ The script sends the arguments after the target to openscad:
 
 ```sh
 ./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh one-colour -D 'button_labels=["<<","||",">>"]' -D 'button_labels_below=["","",""]'
+./make-stls.sh one-colour -D 'button_icons=["prev","play","next"]' -D 'icon_size=5'
 ```
 
 Set `OPENSCAD=/path/to/openscad` if the script cannot find openscad. You can also open
@@ -416,13 +423,16 @@ These are the most useful parameters.
   height of the screw head above the wall. If you change it, change the screw length.
 - `button_hole_d`. The diameter of the hole, 7.2 mm. Measure your buttons. The bushing diameter is
   not the same on all buttons of this family.
-- `button_labels` and `button_labels_below`. The upper and the lower row of lettering, one entry per
-  button. Both lists must be the same length, and the render warns if they are not. Give an entry an
-  empty string for a button that needs only one label.
-- `label_size`. The height of the lettering, 3.5 mm. It is small because a colour change carries the
-  contrast. Print it in one colour and you will want 4.5 mm.
+- `button_icons` and `button_icons_below`. The upper and the lower row of icons, one entry per
+  button. The names are `prev`, `play`, `next`, `pause`, `vol_up` and `vol_down`. Both lists must be
+  the same length, and the render warns if they are not. An unknown name also warns.
+- `icon_size`. The height of an icon, 4 mm. Every icon is exactly this tall, so the row offset is
+  exact and nothing overruns it.
+- `icon_t`. The thickness of every stroke and bar, 1.2 mm. This is the value that keeps the icons
+  printable. Below approximately 0.5 mm a slicer starts dropping features at a 0.4 mm nozzle, so
+  there is a wide margin here on purpose. It also sets the neck of the speaker.
 - `button_nut_d`. The diameter of the nut. The nut sits on the **outside** face. `button_body_d` is
-  the clearance below the lid. The model puts the lettering clear of the nut and not clear of the
+  the clearance below the lid. The model puts the icon clear of the nut and not clear of the
   hole, because the nut is larger than the hole. A driver on the nut is larger again.
 - `floor_t`. The thickness of the floor, 3 mm. The floor is part of the body and closes that end of
   the shell. It also has to swallow a countersunk head, which takes 1.8 mm of it.
