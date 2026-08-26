@@ -73,7 +73,7 @@ button_row_y = 0;         // row offset from the lid centre. Centred, because an
 // a hold does below it.
 button_icons = ["prev", "play", "next"];
 button_icons_below = ["vol_down", "pause", "vol_up"];
-icon_size = 4.0;          // icon height, and the block the row offset is figured from
+icon_size = 5.0;          // icon height, and the block the row offset is figured from
 icon_t = 1.2;             // every stroke and bar. Three beads at a 0.4 mm nozzle, so none drops out
 icon_gap = 0.9;           // between the parts of one icon
 icon_relief = 0.8;        // how far the icon stands proud of the lid
@@ -590,27 +590,31 @@ module button_row() {
         translate([(i - (button_count - 1) / 2) * button_pitch, btn_y]) children();
 }
 
-module lid() {
-    translate([0, 0, lid_z]) union() {
-        difference() {
-            rbox(lid_w, lid_d, lid_t, corner_ri);
-            button_row() translate([0, 0, -1]) cylinder(d = button_hole_d, h = lid_t + 2);
-            button_row() translate([0, 0, -eps])
-                cylinder(d = button_body_d, h = lid_t - button_panel_t + eps);
-            for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, -1]) {
-                cylinder(d = lid_screw_d + 1.0, h = lid_t + 2);
+// Split the way the part prints: everything below the colour change, then everything above it.
+module lid_plate() {
+    translate([0, 0, lid_z]) difference() {
+        rbox(lid_w, lid_d, lid_t, corner_ri);
+        button_row() translate([0, 0, -1]) cylinder(d = button_hole_d, h = lid_t + 2);
+        button_row() translate([0, 0, -eps])
+            cylinder(d = button_body_d, h = lid_t - button_panel_t + eps);
+        for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, -1]) {
+            cylinder(d = lid_screw_d + 1.0, h = lid_t + 2);
             translate([0, 0, 1 + lid_t - lid_head_h])
                 cylinder(d1 = lid_screw_d + 1.0, d2 = lid_head_d, h = lid_head_h + eps);
-            }
         }
-        // Icons stand icon_relief proud of the top face rather than being cut into it.
-        for (r = icon_rows, i = [0:button_count - 1])
-            translate([(i - (button_count - 1) / 2) * button_pitch,
-                       btn_y + r[0] * icon_offset, lid_t - eps])
-                linear_extrude(icon_relief + eps)
-                    icon(r[1][i]);
     }
 }
+
+// Icons stand icon_relief proud of the top face rather than being cut into it.
+module lid_icons() {
+    translate([0, 0, lid_z]) for (r = icon_rows, i = [0:button_count - 1])
+        translate([(i - (button_count - 1) / 2) * button_pitch,
+                   btn_y + r[0] * icon_offset, lid_t - eps])
+            linear_extrude(icon_relief + eps)
+                icon(r[1][i]);
+}
+
+module lid() { union() { lid_plate(); lid_icons(); } }
 
 module ring_placed() {
     place_spk_front() translate([0, 0, speaker_flange_t]) speaker_ring();

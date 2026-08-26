@@ -15,6 +15,11 @@ A printed box for an MP3 module, a 57 mm speaker and three buttons. It has four 
 
 ![Exploded](images/exploded.png)
 
+The lid carries six icons, three for a press and three for a hold. They are shown here in the two
+colours the part prints in.
+
+![Lid](images/lid.png)
+
 The box is **86.8 x 42.5 x 91.6 mm**. It stands upright. The speaker points forward.
 
 ## Contents
@@ -154,7 +159,7 @@ one extrusion.
 
 They are drawn in the model rather than imported. No font OpenSCAD can reach carries the media
 control glyphs, and an icon set drawn on a 24 px screen grid lands back under one extrusion when it
-is scaled to 4 mm.
+is scaled to this size.
 
 ### Either way
 
@@ -377,7 +382,7 @@ The script sends the arguments after the target to openscad:
 
 ```sh
 ./make-stls.sh -D 'pcb_w=77' -D 'pcb_d=33'
-./make-stls.sh one-colour -D 'button_icons=["prev","play","next"]' -D 'icon_size=5'
+./make-stls.sh one-colour -D 'button_icons=["prev","play","next"]' -D 'icon_size=6'
 ```
 
 Set `OPENSCAD=/path/to/openscad` if the script cannot find openscad. You can also open
@@ -426,7 +431,7 @@ These are the most useful parameters.
 - `button_icons` and `button_icons_below`. The upper and the lower row of icons, one entry per
   button. The names are `prev`, `play`, `next`, `pause`, `vol_up` and `vol_down`. Both lists must be
   the same length, and the render warns if they are not. An unknown name also warns.
-- `icon_size`. The height of an icon, 4 mm. Every icon is exactly this tall, so the row offset is
+- `icon_size`. The height of an icon, 5 mm. Every icon is exactly this tall, so the row offset is
   exact and nothing overruns it.
 - `icon_t`. The thickness of every stroke and bar, 1.2 mm. This is the value that keeps the icons
   printable. Below approximately 0.5 mm a slicer starts dropping features at a 0.4 mm nozzle, so
@@ -462,7 +467,7 @@ print plate 176.537 x 142.1 mm
 ## Make the renders again
 
 ```sh
-./export_png.sh     # preview.png and the six straight views in images/
+./export_png.sh     # preview.png, the six straight views and the lid view in images/
 ./export_gif.sh     # the turntable, 36 frames. It needs ffmpeg
 ```
 

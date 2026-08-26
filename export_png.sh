@@ -2,8 +2,9 @@
 # Parameterised OpenSCAD camera renders of the jukebox.
 #
 # Writes a three-quarter hero shot to preview.png, which is what the README embeds, then a set of
-# straight-on views to images/. Every view auto-frames, so only the angles below matter and nothing
-# needs retuning when a component dimension changes the size of the box.
+# straight-on views to images/, then a tilted view of the lid on its own. Every view auto-frames, so
+# only the angles below matter and nothing needs retuning when a component dimension changes the size
+# of the box.
 #
 # Usage:
 #   ./export_png.sh                      # defaults below
@@ -30,6 +31,11 @@ img_h=700
 rot_x=68
 rot_y=0
 rot_z=30
+
+# The lid view. Tilted far enough for the icon walls to catch the light, not so far that the row
+# nearest the camera foreshortens into a line.
+lid_rot_x=38
+lid_rot_z=0
 
 # name rot_x rot_z, one straight-on view each. Perspective rather than orthographic on purpose: a
 # true elevation looks straight down the axis of every recess, so the jack and USB openings vanish
@@ -72,3 +78,24 @@ for view in "${views[@]}"; do
     "$model"
   echo "done: $outdir/$name.png"
 done
+
+# The lid on its own, tilted. One colour hides the subject here: the icons stand 0.8 mm proud and
+# share a normal with the face beneath them, so nothing shades and they read as hairlines. Drawn in
+# the two colours the part is actually printed in instead. part is reassigned after the include
+# because the last assignment in a scope wins, which leaves the model emitting nothing of its own.
+model_abs="$(cd "$(dirname "$model")" && pwd)/$(basename "$model")"
+lid_scad="$(mktemp -t lid_view).scad"
+trap 'rm -f "$lid_scad"' EXIT
+cat > "$lid_scad" <<EOF
+include <$model_abs>
+part = "none";
+color("#e0b02a") lid_plate();
+color("#1f1f1f") lid_icons();
+EOF
+
+openscad --render -o "$outdir/lid.png" \
+  --imgsize="${img_w},${img_h}" \
+  --viewall --autocenter \
+  --camera="0,0,0,${lid_rot_x},${rot_y},${lid_rot_z},0" \
+  "$lid_scad"
+echo "done: $outdir/lid.png"
