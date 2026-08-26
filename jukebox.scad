@@ -11,8 +11,8 @@ explode = 30;             // lid lift in the assembly view
 
 /* [Shell] */
 wall = 2.4;
-floor_t = 3.0;            // integral floor, the closed end of the shell
-lid_t = 3.0;
+floor_t = 3.6;            // integral floor, the closed end of the shell. Deep enough to bury a head
+lid_t = 3.6;
 corner_r = 5;
 ledge_w = 2.0;            // shelf width the lid drops onto
 ledge_h = 3.0;
@@ -20,8 +20,11 @@ lid_fit = 0.35;           // clearance all round the lid
 post_d = 9;               // lid screw boss
 post_h = 14;
 lid_screw_d = 2.6;        // M3 self-tapping pilot
-lid_head_d = 5.8;
-lid_head_h = 1.8;
+// A bore takes a pan head, a cone a countersunk one. Pan, because a countersunk M3 in a ten pack is
+// not sold in Australia and the pan head is on the shelf beside the board and the speaker.
+head_style = "bore";      // [bore, cone]
+lid_head_d = 6.4;         // recess across. An M3 pan head is 6.0, a countersunk head 5.5
+lid_head_h = 2.6;         // recess deep. An M3 pan head is 2.4, a countersunk head 1.7
 
 /* [PCB - XC3748] */
 // BARE BOARD, measured with calipers. Not the catalogue 77 x 33 x 8, which is the envelope
@@ -64,9 +67,9 @@ grille_gap = 1.6;
 
 /* [Buttons - SP0710] */
 button_hole_d = 7.2;      // 7 mm cutout plus fit
-button_body_d = 10.5;     // body and shoulder clearance under the lid
+button_body_d = 10.5;     // body and shoulder clearance, at the underside face
 button_nut_d = 12;        // nut across corners, and it sits on the outside face
-button_panel_t = 2.0;     // local lid thickness at each button
+button_panel_t = 1.35;    // local lid thickness at each button, above the relief cone
 button_pitch = 22;
 button_row_y = 0;         // row offset from the lid centre. Centred, because an icon sits either side
 // Each of the outer buttons does two jobs, so each gets two icons: what a press does above it, what
@@ -146,6 +149,11 @@ icon_rows = [[1, button_icons], [-1, button_icons_below]];
 // Clear of the nut, not of the hole. Every icon is exactly icon_size tall, so nothing overruns.
 icon_offset = button_nut_d / 2 + icon_clear + icon_size / 2;
 btn_req_w = (button_count - 1) * button_pitch + button_body_d + 6;
+// The clearance under a button is a cone, not a counterbore. A square step there is a ring of
+// filament printed over the open hole, which is what leaves straggle on the underside. Struck at 45
+// degrees it carries itself, for the same reason the screw countersinks come out clean.
+button_relief_h = lid_t - button_panel_t;
+button_relief_a = atan(button_relief_h / ((button_body_d - button_hole_d) / 2));
 
 // Depth is set by the front panel, not the board. Every wall opening is placed off the board and
 // the board off the back wall, so the deeper the box the further the openings sit from the front,
@@ -220,6 +228,12 @@ if (face_d - wall < speaker_flange_t + 1)
 if (lip_reach < lip_lead + 1) echo("WARNING: front panel too shallow for the seam lip");
 if (min(lip_t, lip_strap) < 0.9) echo("WARNING: seam half lap leaves a wall under 0.9 mm");
 if (base_post_h < 5) echo("WARNING: pcb_seat_h too low for the base screws to bite");
+if (min(floor_t, lid_t) - lid_head_h < 1.0)
+    echo(str("WARNING: under 1 mm left beneath a screw head. Raise floor_t and lid_t to ",
+             lid_head_h + 1.0));
+if (button_relief_a < 45)
+    echo(str("WARNING: button relief overhangs at ", button_relief_a,
+             " degrees. Lower button_panel_t to ", lid_t - (button_body_d - button_hole_d) / 2));
 if (len(button_icons_below) != button_count)
     echo("WARNING: button_icons_below is not the same length as button_icons");
 
@@ -382,6 +396,15 @@ module base_post_holes(side = 0) {
             cylinder(d = lid_screw_d, h = base_post_h + 1);
 }
 
+// Clearance hole through a plate of thickness t, with the head recess at the top face. The floor
+// mirrors it, because its outer face is the bottom one.
+module screw_head_recess(t) {
+    translate([0, 0, -1]) cylinder(d = lid_screw_d + 1.0, h = t + 2);
+    translate([0, 0, t - lid_head_h])
+        if (head_style == "bore") cylinder(d = lid_head_d, h = lid_head_h + 1);
+        else cylinder(d1 = lid_screw_d + 1.0, d2 = lid_head_d, h = lid_head_h + eps);
+}
+
 // Two walls take openings and no others: the connectors go out the right, the card slot out the
 // back. Both frames start 1 mm proud of the wall with +Z running into the box. On the right wall
 // the local X axis is vertical, so profiles there are given height first.
@@ -522,11 +545,8 @@ module floor_plate() {
                 before(seam_y + eps);
             }
         }
-        for (sx = [-1, 1]) translate([sx * px, -py, 0]) {
-            translate([0, 0, -1]) cylinder(d = lid_screw_d + 1.0, h = floor_t + 2);
-            translate([0, 0, -eps])
-                cylinder(d1 = lid_head_d, d2 = lid_screw_d + 1.0, h = lid_head_h + eps);
-        }
+        for (sx = [-1, 1])
+            translate([sx * px, -py, floor_t]) mirror([0, 0, 1]) screw_head_recess(floor_t);
     }
 }
 
@@ -596,12 +616,9 @@ module lid_plate() {
         rbox(lid_w, lid_d, lid_t, corner_ri);
         button_row() translate([0, 0, -1]) cylinder(d = button_hole_d, h = lid_t + 2);
         button_row() translate([0, 0, -eps])
-            cylinder(d = button_body_d, h = lid_t - button_panel_t + eps);
-        for (sx = [-1, 1], sy = [-1, 1]) translate([sx * px, sy * py, -1]) {
-            cylinder(d = lid_screw_d + 1.0, h = lid_t + 2);
-            translate([0, 0, 1 + lid_t - lid_head_h])
-                cylinder(d1 = lid_screw_d + 1.0, d2 = lid_head_d, h = lid_head_h + eps);
-        }
+            cylinder(d1 = button_body_d, d2 = button_hole_d, h = button_relief_h + eps);
+        for (sx = [-1, 1], sy = [-1, 1])
+            translate([sx * px, sy * py, 0]) screw_head_recess(lid_t);
     }
 }
 

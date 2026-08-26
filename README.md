@@ -20,7 +20,7 @@ colours the part prints in.
 
 ![Lid](images/lid.png)
 
-The box is **86.8 x 42.5 x 91.6 mm**. It stands upright. The speaker points forward.
+The box is **86.8 x 42.5 x 92.8 mm**. It stands upright. The speaker points forward.
 
 ## Contents
 
@@ -55,39 +55,79 @@ You also need a microSD card, a micro USB cable, a 5 V USB charger and 2 m of wi
 
 ## Screws
 
-The model needs 12 screws. The head type is as important as the length. Jaycar does not sell the
-correct heads, so buy these screws from a fastener supplier.
+The model needs 12 screws and every one of them is a pan head.
 
 | Qty | Size | Head | Use |
 | --- | --- | --- | --- |
-| 6 | M3 x 10 | countersunk, 90 degrees | 4 in the lid, 2 up through the floor |
+| 6 | M3 x 10 | pan | 4 in the lid, 2 up through the floor |
 | 4 | M3 x 6 | pan | the speaker ring |
 | 2 | M2 x 8 | pan | the board |
 
-The lid and the floor have a conical recess at each screw. A countersunk head seats in this recess
-approximately 1 mm below the surface. A pan head cannot seat in a cone. A pan head stands
-approximately 1.6 mm above the surface. This is a problem at the floor, because a rubber foot goes
-over each of the two screws there. A foot cannot stick to a surface that has a screw head above it.
+The lid and the floor have a flat counterbore at each screw, 6.4 mm across and 2.6 mm deep. An M3
+pan head is 6.0 mm across and 2.4 mm tall, so it drops in and finishes approximately 0.2 mm below
+the surface. That matters at the floor, because a rubber foot goes over each of the two screws
+there, and a foot cannot stick to a surface that has a screw head above it.
 
-The speaker ring and the board both have a plain hole at each screw. The head must bear on a flat
-face, so use a pan head.
+The speaker ring and the board both have a plain hole at each screw. The head bears on the face
+around it, which is what a pan head is for.
 
-All four sizes cut their own thread in the plastic. The holes in the model are the correct pilot
+The box used to want countersunk heads here. It no longer does. A countersunk M3 in a hobby pack is
+not sold in Australia, and the counterbore takes a screw that sits on the shelf beside the board and
+the speaker. Set `head_style = "cone"` to get the old conical recess back.
+
+One cost of the flat bore over the old cone. At the floor it opens downward, so its ceiling is a
+1.4 mm ring of filament bridged over the head pocket. It prints fine at that span and the screw head
+hides it, but it is not the self-supporting surface a cone gave you. The lid bore opens upward and
+bridges nothing.
+
+A pan head measures its length under the head. The two floor screws have 3.6 mm of floor plus an
+8 mm post to reach into, and 10 mm of shank below a head buried 2.6 mm leaves 0.6 mm spare at the
+top of the post. Do not fit anything longer there. The board underside sits level with that post and
+a longer screw fouls its corner. The four lid screws have 14 mm of post and take 12 mm happily.
+
+All three sizes cut their own thread in the plastic. The holes in the model are the correct pilot
 diameters. Screws for plastic hold better than machine screws, but machine screws also work.
+
+### Where to buy
+
+Every screw comes from [Jaycar](https://www.jaycar.com.au/tools-test-equipment/tools/screws-fasteners/c/7FJ),
+in the same order as the board and the speaker. Prices are as at August 2026 and they change.
+
+| Screw | Cat no | Product | Price | Pack |
+| --- | --- | --- | --- | --- |
+| 6 × M3 x 10 | HP0403 | [M3 x 10 mm steel screws](https://www.jaycar.com.au/m3-x-10mm-steel-screws-pack-of-25/p/HP0403), pan, Phillips | $2.95 | 25 |
+| 4 × M3 x 6 | HP0400 | [M3 x 6 mm steel screws](https://www.jaycar.com.au/m3-x-6mm-steel-screws-pack-of-25/p/HP0400), pan, Phillips | $2.50 | 25 |
+| 2 × M2 x 8 | HP0390 | [M2 x 8 mm metric metal thread fasteners](https://www.jaycar.com.au/m2-x-8mm-metric-metal-thread-fasteners/p/HP0390), pan, Pozidriv | $1.50 | 4 |
+
+Three part numbers, $6.95, and enough M3 left over for four more boxes. HP0390 holds only four, so
+buy one pack per two boxes.
+
+Other suppliers, if Jaycar is out of stock or you want stainless:
+
+| Supplier | What they have |
+| --- | --- |
+| [Bunnings](https://www.bunnings.com.au/products/building-hardware/fasteners-fixings/nuts-bolts) | No M2 at all, and no pan head metric. Nearest is a round head bolt and nut pack, [Pinnacle M3 x 6 mm](https://www.bunnings.com.au/pinnacle-m3-x-6mm-zinc-plated-round-head-bolts-and-nuts-24-pack_p0247261) at $1.84 for 24 or [M3 x 10 mm](https://www.bunnings.com.au/pinnacle-m3-x-10mm-zinc-plated-round-head-bolts-and-nuts-20-pack_p0247262) at $1.69 for 20. A round head seats in the counterbore well enough. Discard the nuts |
+| [Core Electronics](https://core-electronics.com.au/hardware/screws-nuts.html) | M3 hex head cap in 6, 8, 10, 12, 16 and 20 mm at $1.35 each. A cap head is 5.5 mm across and fits the counterbore. No M2 |
+| [Maker Store](https://www.makerstore.com.au/product-category/hardware/screws/m3/) | M3 button head 10 packs from $1.16, cap head from $0.92. A button head is 5.7 mm across and fits. No M2 |
+| [Scrooz](https://www.scrooz.com.au/nuts-and-bolts/machine-screws/m3/) | M3 machine screws by the trade box of 100, from $6.35. Worth it only for a batch |
+
+Printing the screws does not work. A printed screw cannot cut a thread, so every one of them would
+need a mating printed thread that this model does not have. M2 is below the practical floor for a
+printed thread at a 0.4 mm nozzle in any case.
 
 ## Feet
 
 The bottom of the box is flat. There are no recesses for the feet.
 
 Use four rubber feet, one in each corner. The two at the front go over the two screws that hold the
-panel down. The foot is 12 x 12 mm and the screw head is 5.8 mm, so the foot hides the screw. Those
+panel down. The foot is 12 x 12 mm and the screw head is 6.0 mm, so the foot hides the screw. Those
 two screw heads must be flush. Refer to the section above.
 
 The feet do two things. They stop the box when it slides. They also separate the box from the bench,
 so the bench does not amplify the vibration of the speaker.
 
-The feet do not stop the box when it falls over. The box is 91.6 mm tall and 42.5 mm deep. The
-speaker is the heaviest part and its centre is 54 mm above the bench. The box falls over at
+The feet do not stop the box when it falls over. The box is 92.8 mm tall and 42.5 mm deep. The
+speaker is the heaviest part and its centre is 55 mm above the bench. The box falls over at
 approximately 21 degrees from vertical. A pull on a headphone cable is enough. Put the box against a
 wall, or add mass inside the box.
 
@@ -101,7 +141,7 @@ Choose one of two setups. They differ only in the lid.
 ./make-stls.sh one-colour
 ```
 
-One file, `stl/plate_one_colour.stl`, holding all four parts on a bed of **177 x 143 x 92 mm**. Slice
+One file, `stl/plate_one_colour.stl`, holding all four parts on a bed of **177 x 144 x 93 mm**. Slice
 it and print it. That is the whole job.
 
 ### Setup two: two colours
@@ -114,15 +154,15 @@ Two files, printed one after the other.
 
 | Order | File | Bed | Layers | Colour |
 | --- | --- | --- | --- | --- |
-| 1 | `stl/plate_two_colour.stl` | 156 x 143 x 92 mm | 458 | one colour throughout |
-| 2 | `stl/plate_lid.stl` | 82 x 38 x 4 mm | 19 | change filament at **3.0 mm** |
+| 1 | `stl/plate_two_colour.stl` | 156 x 144 x 93 mm | 464 | one colour throughout |
+| 2 | `stl/plate_lid.stl` | 82 x 38 x 5 mm | 22 | change filament at **3.6 mm** |
 
 The icons stand 0.8 mm proud of the top of the lid and nothing else on the lid reaches that height,
 so one filament change prints all six of them in a second colour. No multi material hardware is
-needed. The lid is 3.8 mm tall, its top face is at 3.0 mm, and the icons are the four layers above it
+needed. The lid is 4.4 mm tall, its top face is at 3.6 mm, and the icons are the four layers above it
 at 0.2 mm.
 
-**This is why the lid gets a bed of its own.** A colour change is a height, not a part. Made at 3.0 mm
+**This is why the lid gets a bed of its own.** A colour change is a height, not a part. Made at 3.6 mm
 on a shared bed it would also land partway up the body, the panel and the ring.
 
 #### Setting the colour change in the slicer
@@ -138,17 +178,17 @@ before it appears at all.
    Prepare. This is what most people are missing when they cannot find the setting.
 3. **Drag the vertical slider on the right** until the icons first appear in the preview. That
    is the layer to change on. Trust what you see rather than counting: it lands at Z **3.2 mm**, the
-   first of the four layers above the 3.0 mm top face.
+   first of the four layers above the 3.6 mm top face.
 4. **Click the + on the slider handle**, or right click it, and choose the filament change. Pick
    filament 2. Without an AMS, choose the pause instead and swap the spool by hand when it stops.
-5. **Slice again and scrub the slider.** Everything below 3.0 mm should be the first colour and all
+5. **Slice again and scrub the slider.** Everything below 3.6 mm should be the first colour and all
    six icons the second. If the icons are the wrong colour you are one layer out.
 
 PrusaSlicer, Orca and Cura all work the same way. The control is on the layer slider in the sliced
 preview, and it is variously called add filament change, add colour change or add pause.
 
 Print the lid first. It takes minutes, and it tells you whether the colour change landed on the right
-layer before you commit to the 458 layer bed.
+layer before you commit to the 464 layer bed.
 
 **The lid carries icons, not words.** An earlier version set the six labels in type at 3.5 mm and it
 did not survive the nozzle: the stems of Liberation Sans work out near 0.34 mm at that size, under
@@ -168,14 +208,14 @@ Any bed of 200 mm is large enough for both setups.
 - **No part needs support material.** The body stands upright on its floor. This is the only
   orientation that puts the rails and posts of the board seat the right way up. The panel lies on its
   face, which puts the grille flat on the bed. The lid and the ring lie flat.
-- **The body is the tall part.** It makes its bed 91.6 mm high, and most of those layers hold nothing
+- **The body is the tall part.** It makes its bed 92.8 mm high, and most of those layers hold nothing
   but a thin wall, so they are quick. The volume of plastic is what sets the time, and that is the
   same in both setups.
 - **Use 0.2 mm layers and 3 perimeters.** Approximately 101 g in total.
 
 You can also use 0.3 mm layers. No part needs 0.2 mm. The only small vertical detail is the icon
-relief of 0.8 mm. At 0.3 mm the tall bed is 306 layers. First set `icon_relief = 0.9`. The icons are
-then exactly three layers, and the colour change is still at 3.0 mm.
+relief of 0.8 mm. At 0.3 mm the tall bed is 310 layers. First set `icon_relief = 0.9`. The icons are
+then exactly three layers, and the colour change is still at 3.6 mm.
 
 Three details of the model exist only to keep both setups free of support material. A 45 degree run-up
 carries the ledge of the lid, which would otherwise overhang the cavity by 2 mm. A 45 degree cone
@@ -233,7 +273,7 @@ box open, so a short screwdriver reaches everything.
    box, and the next steps need the speaker wires already on.
 
 4. Wire the three buttons. Refer to the next section. Install the buttons in the lid. Install the
-   nuts on the outside face. The lid is 2 mm thick at each hole, so the thread is long enough.
+   nuts on the outside face. The lid is 1.35 mm thick at each hole, so the thread is long enough.
 
 5. Solder the speaker wires to the S-OUT pair. This pair is at the header end of the board. Make
    these wires 150 mm to 200 mm long.
@@ -401,8 +441,8 @@ change the contents. Three items control the dimensions.
 
 | Change | Result |
 | --- | --- |
-| no change | 86.8 x 42.5 x 91.6 |
-| `-D 'pcb_over_right_f=0.015'`, header pins cut flush | 81.1 x 42.5 x 91.6 |
+| no change | 86.8 x 42.5 x 92.8 |
+| `-D 'pcb_over_right_f=0.015'`, header pins cut flush | 81.1 x 42.5 x 92.8 |
 | `-D 'speaker_d=40' -D 'speaker_depth=12'` | 86.8 x 42.5 x 74.6 |
 | both of the changes above | 81.1 x 42.5 x 74.6 |
 | `-D 'pcb_seat_h=5'`, the board sits lower on the floor | 86.8 x 42.5 x 88.6 |
@@ -437,10 +477,21 @@ These are the most useful parameters.
   printable. Below approximately 0.5 mm a slicer starts dropping features at a 0.4 mm nozzle, so
   there is a wide margin here on purpose. It also sets the neck of the speaker.
 - `button_nut_d`. The diameter of the nut. The nut sits on the **outside** face. `button_body_d` is
-  the clearance below the lid. The model puts the icon clear of the nut and not clear of the
+  the clearance at the underside face. The model puts the icon clear of the nut and not clear of the
   hole, because the nut is larger than the hole. A driver on the nut is larger again.
-- `floor_t`. The thickness of the floor, 3 mm. The floor is part of the body and closes that end of
-  the shell. It also has to swallow a countersunk head, which takes 1.8 mm of it.
+- `button_panel_t`. The lid thickness at each button, 1.35 mm. Below it the clearance opens out to
+  `button_body_d` as a **cone, not a counterbore**. A square step there is a ring of filament printed
+  over the open hole, and it comes off the bed hairy on the underside. At 1.35 mm the cone stands at
+  54 degrees, steeper than the 45 it needs, and carries itself. Raise this value and the cone gets
+  shallower. Past 45 degrees the render warns and tells you the value to drop back to.
+- `head_style`. How the lid and the floor recess a screw head, `bore` or `cone`. A bore is flat and
+  takes a pan head. A cone is countersunk. The default is `bore` because a countersunk M3 is not
+  sold in a hobby pack in Australia and a pan head is.
+- `lid_head_d` and `lid_head_h`. The recess, 6.4 mm across and 2.6 mm deep. Sized for an M3 pan head
+  of 6.0 x 2.4. For `head_style = "cone"` set these to 5.8 and 1.8.
+- `floor_t` and `lid_t`. Both 3.6 mm. Each has to swallow a screw head, which takes 2.6 mm, and
+  1.0 mm is left over. The render warns below 1.0 mm. 3.6 is also a whole number of layers at both
+  0.2 mm and 0.3 mm, which keeps the lid colour change on a layer boundary either way.
 - `split_clear`. The distance between the seam and the nearest opening in a wall. No opening is ever
   cut in two. `split_fit` is the clearance where the posts of the panel enter the shell, and also the
   clearance in the half lap of the seam.
@@ -454,14 +505,16 @@ These are the most useful parameters.
 Each render prints the calculated dimensions. Read the console after each change.
 
 ```
-outer  86.8433 x 42.5 x 91.6 mm
+outer  86.8433 x 42.5 x 92.8 mm
 cavity 82.0433 x 37.7 x 85.6 mm
 pcb 69 x 32, jack out 3.9537, headers out 6.7896 mm
 pcb screw posts at [[-28.0485, -0.4896], [32.1264, 1.6096]] from board centre
 sd card sits 4.5 mm inside the back wall
 split seam at y -14.35, front panel 6.9 mm deep
 seam half lap: tongue 1.075 x 2.75, panel strap 1.075 mm
-print plate 176.537 x 142.1 mm
+plate one colour 176.537 x 143.3 x 92.8 mm
+plate two colour 155.843 x 143.3 x 92.8 mm, plus lid 81.6933 x 37.35 x 4.4 mm
+colour change the lid at 3.6 mm
 ```
 
 ## Make the renders again
